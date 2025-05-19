@@ -1,0 +1,3 @@
+com\pickandgo\Application.class
+com\pickandgo\model\Produit.class
+com\pickandgo\config\AWSConfig.class
