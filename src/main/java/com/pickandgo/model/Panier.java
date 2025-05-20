@@ -1,15 +1,18 @@
 package com.pickandgo.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
 @Entity
+@Table(name = "Panier")
 public class Panier {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,10 +20,23 @@ public class Panier {
     private Integer id;
 
     @Column(name = "prixtotalPa", precision = 10, scale = 2)
-    private BigDecimal prixtotalPa;
+    private BigDecimal prixtotalPa = BigDecimal.ZERO;
 
-    @Size(max = 50)
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 50)
-    private String status;
+    private StatutPanier status = StatutPanier.EN_COURS;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "idU")
+    private Utilisateur utilisateur;
+
+    @OneToMany(mappedBy = "panier", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<Constituer> lignes = new ArrayList<>();
+
+    public enum StatutPanier {
+        EN_COURS,
+        CONFIRME,
+        RECUPERE
+    }
 }

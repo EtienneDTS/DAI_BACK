@@ -1,5 +1,6 @@
 package com.pickandgo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -32,6 +33,7 @@ public class Utilisateur {
 
     @Size(max = 255)
     @Column(name = "motDePasse")
+    @JsonIgnore
     private String motDePasse;
 
     @Lob
