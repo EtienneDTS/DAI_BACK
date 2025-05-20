@@ -11,9 +11,8 @@ public class UtilisateurService {
     private UtilisateurRepository utilisateurRepository;
 
     public Utilisateur verifierConnexion(String email, String password) {
-        //return utilisateurRepository.findByEmailU(email)
-               // .filter(utilisateur -> utilisateur.getPassword().equals(password))
-               // .orElse(null);
-        return null;
+        return utilisateurRepository.findByEmailU(email)
+                .filter(utilisateur -> utilisateur.getMotDePasse().equals(password))
+                .orElse(null);
     }
 }

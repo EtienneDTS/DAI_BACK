@@ -1,6 +1,6 @@
 package com.pickandgo.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -17,10 +17,12 @@ public class Utilisateur {
 
     @Size(max = 100)
     @Column(name = "nomU", length = 100)
+    @JsonProperty("nom")
     private String nomU;
 
     @Size(max = 100)
     @Column(name = "prenomU", length = 100)
+    @JsonProperty("prenom")
     private String prenomU;
 
     @Size(max = 50)
@@ -29,15 +31,16 @@ public class Utilisateur {
 
     @Size(max = 100)
     @Column(name = "emailU", length = 100)
+    @JsonProperty("email")
     private String emailU;
 
     @Size(max = 255)
     @Column(name = "motDePasse")
-    @JsonIgnore
     private String motDePasse;
 
     @Lob
     @Column(name = "adresseU")
+    @JsonProperty("adresse")
     private String adresseU;
 
 }
