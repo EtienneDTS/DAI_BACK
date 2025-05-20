@@ -14,7 +14,9 @@ public class AuthController {
     private UtilisateurService utilisateurService;
 
     @PostMapping("/api/login")
-    public Utilisateur login(@RequestParam String email, @RequestParam String password) {
-        return utilisateurService.verifierConnexion(email, password);
+    public Utilisateur login(@RequestBody Utilisateur credentials) {
+        String email = credentials.getEmailU();
+        String motDePasse = credentials.getMotDePasse();
+        return utilisateurService.verifierConnexion(email, motDePasse);
     }
 }
