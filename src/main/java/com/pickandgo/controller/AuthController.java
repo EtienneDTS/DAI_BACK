@@ -7,12 +7,13 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping
+@CrossOrigin(origins = "http://localhost:5173")
 public class AuthController {
 
     @Autowired
     private UtilisateurService utilisateurService;
 
-    @PostMapping("/login")
+    @PostMapping("/api/login")
     public Utilisateur login(@RequestParam String email, @RequestParam String password) {
         return utilisateurService.verifierConnexion(email, password);
     }
