@@ -43,5 +43,4 @@ public class Utilisateur {
     @JsonProperty("adresse")
     private String adresseU;
 
-
 }
