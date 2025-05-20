@@ -1,5 +1,6 @@
 package com.pickandgo.service;
 
+import com.pickandgo.model.Utilisateur;
 import com.pickandgo.repository.UtilisateurRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,9 +10,9 @@ public class UtilisateurService {
     @Autowired
     private UtilisateurRepository utilisateurRepository;
 
-    public boolean verifierConnexion(String email, String password) {
+    public Utilisateur verifierConnexion(String email, String password) {
         return utilisateurRepository.findByEmailU(email)
-                .map(utilisateur -> utilisateur.getPassword().equals(password))
-                .orElse(false);
+                .filter(utilisateur -> utilisateur.getPassword().equals(password))
+                .orElse(null);
     }
 }
