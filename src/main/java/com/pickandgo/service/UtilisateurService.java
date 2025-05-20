@@ -12,7 +12,7 @@ public class UtilisateurService {
 
     public Utilisateur verifierConnexion(String email, String password) {
         return utilisateurRepository.findByEmailU(email)
-                .filter(utilisateur -> utilisateur.getPassword().equals(password))
+                .filter(utilisateur -> utilisateur.getMotDePasse().equals(password))
                 .orElse(null);
     }
 }
