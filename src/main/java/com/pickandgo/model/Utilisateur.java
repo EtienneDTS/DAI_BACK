@@ -1,80 +1,41 @@
 package com.pickandgo.model;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+@Entity
 public class Utilisateur {
-    private final int idU;
-    private String prenomU;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "idU", nullable = false)
+    private Integer id;
+
+    @Size(max = 100)
+    @Column(name = "nomU", length = 100)
     private String nomU;
+
+    @Size(max = 100)
+    @Column(name = "prenomU", length = 100)
+    private String prenomU;
+
+    @Size(max = 50)
+    @Column(name = "role", length = 50)
+    private String role;
+
+    @Size(max = 100)
+    @Column(name = "emailU", length = 100)
     private String emailU;
-    private Role role;
-    private String password;
+
+    @Size(max = 255)
+    @Column(name = "motDePasse")
+    private String motDePasse;
+
+    @Lob
+    @Column(name = "adresseU")
     private String adresseU;
-
-    public Utilisateur(int idU, String prenomU, String nomU, String emailU, Role role, String password, String adresseU) {
-        this.idU = idU;
-        this.prenomU = prenomU;
-        this.nomU = nomU;
-        this.emailU = emailU;
-        this.role = role;
-        this.password = password;
-        this.adresseU = adresseU;
-    }
-
-    @Override
-    public String toString() {
-        return "Utilisateur{" +
-                "idU=" + idU +
-                ", prenomU='" + prenomU + '\'' +
-                ", nomU='" + nomU + '\'' +
-                ", emailU='" + emailU + '\'' +
-                ", role=" + role +
-                ", password='" + password + '\'' +
-                ", adresseU='" + adresseU + '\'' +
-                '}';
-    }
-
-    public String getNomU() {
-        return nomU;
-    }
-    public void setNomU(String nomU) {
-        this.nomU = nomU;
-    }
-    public String getPrenomU() {
-        return prenomU;
-    }
-    public void setPrenomU(String prenomU) {
-        this.prenomU = prenomU;
-    }
-    public String getEmailU() {
-        return emailU;
-    }
-    public void setEmailU(String emailU) {
-        this.emailU = emailU;
-    }
-    public Role getRole() {
-        return role;
-    }
-    public void setRole(Role role) {
-        this.role = role;
-    }
-
-    public void setAdresseU(String adresseU) {
-        this.adresseU = adresseU;
-    }
-
-    public String getAdresseU() {
-        return adresseU;
-    }
-
-    public int getIdU() {
-        return idU;
-    }
-
-    //A verifier
-    public String getPassword() {
-        return password;
-    }
-    public void setPassword(String password) {
-        this.password = password;
-    }
 
 }

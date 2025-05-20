@@ -1,28 +1,21 @@
 package com.pickandgo.model;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+@Entity
 public class MotCle {
-    private final int idMc;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "idMc", nullable = false)
+    private Integer id;
+
+    @Size(max = 100)
+    @Column(name = "motMc", length = 100)
     private String motMc;
 
-    public MotCle(int idMc, String motMc) {
-        this.idMc = idMc;
-        this.motMc = motMc;
-    }
-    public int getIdMc() {
-        return idMc;
-    }
-    public String getMotMc() {
-        return motMc;
-    }
-    public void setMotMc(String motMc) {
-        this.motMc = motMc;
-    }
-
-    @Override
-    public String toString() {
-        return "MotCle{" +
-                "idMc=" + idMc +
-                ", motMc='" + motMc + '\'' +
-                '}';
-    }
 }

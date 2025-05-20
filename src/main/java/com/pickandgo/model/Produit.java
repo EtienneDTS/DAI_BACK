@@ -1,134 +1,55 @@
 package com.pickandgo.model;
 
-import java.util.Objects;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
 
+import java.math.BigDecimal;
+
+@Getter
+@Setter
+@Entity
 public class Produit {
-    private int idProduit;
-    private String nomProduit;
-    private boolean estDisponible;
-    private String urlImgProduit;
-    private double prixUnitProduit;
-    private double prixKgProduit;
-    private int nbUnitesProduit;
-    private double poidsProduit;
-    private Nutriscore nutriscoreProduit;
-    private boolean estBio;
-    private String marqueProduit;
-    private int idCategorieProduit;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "idP", nullable = false)
+    private Integer id;
 
-    public Produit(String nomProduit, double prixUnitProduit, double prixKgProduit,
-                   int nbUnitesProduit, double poidsProduit, Nutriscore nutriscoreProduit,
-                   boolean estBio, String marqueProduit, int idCategorieProduit) {
-        this.nomProduit = nomProduit;
-        this.prixUnitProduit = prixUnitProduit;
-        this.prixKgProduit = prixKgProduit;
-        this.nbUnitesProduit = nbUnitesProduit;
-        this.poidsProduit = poidsProduit;
-        this.nutriscoreProduit = nutriscoreProduit;
-        this.estBio = estBio;
-        this.marqueProduit = marqueProduit;
-        this.idCategorieProduit = idCategorieProduit;
-        this.estDisponible=estDisponible;
-    }
+    @Size(max = 100)
+    @Column(name = "nomP", length = 100)
+    private String nomP;
 
-    public int getIdProduit() {
-        return idProduit;
-    }
+    @Column(name = "prixUnitaireP", precision = 10, scale = 2)
+    private BigDecimal prixUnitaireP;
 
-    public void setEstDisponible(int idProduit) {
-        this.estDisponible = estDisponible;
-    }
+    @Column(name = "prixKgP", precision = 10, scale = 2)
+    private BigDecimal prixKgP;
 
-    public Boolean getEstDisponible() {
-        return estDisponible;
-    }
+    @Column(name = "poidsP")
+    private Integer poidsP;
 
-    public double getPrixUnitProduit() {
-        return prixUnitProduit;
-    }
+    @Size(max = 10)
+    @Column(name = "nutriP", length = 10)
+    private String nutriP;
 
-    public void setPrixUnitProduit(double prixUnitProduit) {
-        this.prixUnitProduit = prixUnitProduit;
-    }
+    @Size(max = 100)
+    @Column(name = "conditionnementP", length = 100)
+    private String conditionnementP;
 
-    public double getPrixKgProduit() {
-        return prixKgProduit;
-    }
+    @Column(name = "bioP")
+    private Boolean bioP;
 
-    public void setPrixKgProduit(double prixKgProduit) {
-        this.prixKgProduit = prixKgProduit;
-    }
+    @Size(max = 100)
+    @Column(name = "marqueP", length = 100)
+    private String marqueP;
 
-    public int getNbUnitesProduit() {
-        return nbUnitesProduit;
-    }
+    @Size(max = 255)
+    @Column(name = "urlImage")
+    private String urlImage;
 
-    public void setNbUnitesProduit(int nbUnitesProduit) {
-        this.nbUnitesProduit = nbUnitesProduit;
-    }
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "idCate")
+    private Categorie idCate;
 
-    public double getPoidsProduit() {
-        return poidsProduit;
-    }
-
-    public void setPoidsProduit(double poidsProduit) {
-        this.poidsProduit = poidsProduit;
-    }
-
-    public Nutriscore getNutriscoreProduit() {
-        return nutriscoreProduit;
-    }
-
-    public boolean isEstBio() {
-        return estBio;
-    }
-
-    public void setEstBio(boolean estBio) {
-        this.estBio = estBio;
-    }
-
-    public String getMarqueProduit() {
-        return marqueProduit;
-    }
-
-    public void setMarqueProduit(String marqueProduit) {
-        this.marqueProduit = marqueProduit;
-    }
-
-    public int getIdCategorieProduit() {
-        return idCategorieProduit;
-    }
-
-    public void setIdCategorieProduit(int idCategorieProduit) {
-        this.idCategorieProduit = idCategorieProduit;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Produit produit = (Produit) o;
-        return idProduit == produit.idProduit && Double.compare(prixUnitProduit, produit.prixUnitProduit) == 0 && Double.compare(prixKgProduit, produit.prixKgProduit) == 0 && nbUnitesProduit == produit.nbUnitesProduit && Double.compare(poidsProduit, produit.poidsProduit) == 0 && estBio == produit.estBio && idCategorieProduit == produit.idCategorieProduit && Objects.equals(nomProduit, produit.nomProduit) && nutriscoreProduit == produit.nutriscoreProduit && Objects.equals(marqueProduit, produit.marqueProduit);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(idProduit, nomProduit, prixUnitProduit, prixKgProduit, nbUnitesProduit, poidsProduit, nutriscoreProduit, estBio, marqueProduit, idCategorieProduit);
-    }
-
-    @Override
-    public String toString() {
-        return "Produit{" +
-                "idProduit=" + idProduit +
-                ", nomProduit='" + nomProduit + '\'' +
-                ", prixUnitProduit=" + prixUnitProduit +
-                ", prixKgProduit=" + prixKgProduit +
-                ", nbUnitesProduit=" + nbUnitesProduit +
-                ", poidsProduit=" + poidsProduit +
-                ", nutriscoreProduit=" + nutriscoreProduit +
-                ", estBio=" + estBio +
-                ", marqueProduit='" + marqueProduit + '\'' +
-                ", idCategorieProduit=" + idCategorieProduit +
-                '}';
-    }
 }

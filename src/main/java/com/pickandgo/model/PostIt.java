@@ -1,28 +1,20 @@
 package com.pickandgo.model;
 
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+@Entity
 public class PostIt {
-    private final int idPt;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "idPI", nullable = false)
+    private Integer id;
+
+    @Lob
+    @Column(name = "texte")
     private String texte;
 
-    public PostIt(int idPt, String texte) {
-        this.idPt = idPt;
-        this.texte = texte;
-    }
-    public int getIdPt() {
-        return idPt;
-    }
-    public String getTexte() {
-        return texte;
-    }
-    public void setTexte(String texte) {
-        this.texte = texte;
-    }
-
-    @Override
-    public String toString() {
-        return "PostIt{" +
-                "idPt=" + idPt +
-                ", texte='" + texte + '\'' +
-                '}';
-    }
 }

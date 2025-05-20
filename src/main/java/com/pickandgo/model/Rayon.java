@@ -1,29 +1,21 @@
 package com.pickandgo.model;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+@Entity
 public class Rayon {
-    private final int idR;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "idR", nullable = false)
+    private Integer id;
+
+    @Size(max = 100)
+    @Column(name = "nomR", length = 100)
     private String nomR;
 
-    public Rayon(int idR, String nomR) {
-        this.idR = idR;
-        this.nomR = nomR;
-    }
-
-    public int getIdR() {
-        return idR;
-    }
-    public String getNomR() {
-        return nomR;
-    }
-    public void setNomR(String nomR) {
-        this.nomR = nomR;
-    }
-
-    @Override
-    public String toString() {
-        return "Rayon{" +
-                "idR=" + idR +
-                ", nomR='" + nomR + '\'' +
-                '}';
-    }
 }

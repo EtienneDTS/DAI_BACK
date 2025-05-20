@@ -1,29 +1,29 @@
 package com.pickandgo.model;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+@Entity
 public class Promotion {
-    private final int idPR;
-    private String nomP;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "idPr", nullable = false)
+    private Integer id;
 
-    public Promotion(int idPR, String nomP) {
-        this.idPR = idPR;
-        this.nomP = nomP;
-    }
+    @Size(max = 100)
+    @Column(name = "nomPr", length = 100)
+    private String nomPr;
 
-    public int getIdPR() {
-        return idPR;
-    }
-    public String getNomP() {
-        return nomP;
-    }
-    public void setNomP(String nomP) {
-        this.nomP = nomP;
-    }
+    @Size(max = 255)
+    @Column(name = "urlImagePromo")
+    private String urlImagePromo;
 
-    @Override
-    public String toString() {
-        return "Promotion{" +
-                "idPR=" + idPR +
-                ", nomP='" + nomP + '\'' +
-                '}';
-    }
+    @Size(max = 255)
+    @Column(name = "typePr")
+    private String typePr;
+
 }

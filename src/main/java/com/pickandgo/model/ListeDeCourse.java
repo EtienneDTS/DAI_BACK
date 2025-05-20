@@ -1,29 +1,21 @@
 package com.pickandgo.model;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+@Entity
 public class ListeDeCourse {
-    private final int idL;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "idL", nullable = false)
+    private Integer id;
+
+    @Size(max = 100)
+    @Column(name = "nomL", length = 100)
     private String nomL;
 
-    public ListeDeCourse(int idL, String nomL) {
-        this.idL = idL;
-        this.nomL = nomL;
-    }
-
-    public int getIdL() {
-        return idL;
-    }
-    public String getNomL() {
-        return nomL;
-    }
-    public void setNomL(String nomL) {
-         this.nomL=nomL;
-    }
-
-    @Override
-    public String toString() {
-        return "ListeDeCourse{" +
-                "idL=" + idL +
-                ", nomL='" + nomL + '\'' +
-                '}';
-    }
 }
