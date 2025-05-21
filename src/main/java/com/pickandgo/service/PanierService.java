@@ -1,4 +1,5 @@
 package com.pickandgo.service;
+import com.pickandgo.dto.SupprimerProduitEntierDTO;
 import com.pickandgo.dto.SupprimerProduitPanierDTO;
 import com.pickandgo.dto.AjoutProduitPanierDTO;
 import com.pickandgo.model.*;
@@ -61,7 +62,7 @@ public class PanierService {
 
         // Chercher si ce produit est déjà dans le panier
         Optional<Constituer> ligneExistante = constituerRepository.findByPanierIdAndProduitId(
-                panier.getId(), produit.getId());
+                panier.getIdPanier(), produit.getId());
 
         if (ligneExistante.isPresent()) {
             // Mettre à jour la quantité
@@ -86,27 +87,77 @@ public class PanierService {
 
     }
 
-    public Panier getPanierEnCoursUtilisateur(Integer utilisateurId) {
-        return panierRepository.findByUtilisateurIdAndStatus(utilisateurId, Panier.StatutPanier.EN_COURS)
-                .orElseThrow(() -> new RuntimeException("Aucun panier en cours trouvé pour cet utilisateur"));
+    // Méthode modifiée pour récupérer le panier d'un utilisateur (ou en créer un s'il n'existe pas)
+    public Panier getPanierUtilisateur(Integer utilisateurId) {
+        Utilisateur utilisateur = utilisateurRepository.findById(utilisateurId)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        Optional<Panier> panierExistant = panierRepository.findByUtilisateurIdAndStatus(
+                utilisateurId, Panier.StatutPanier.EN_COURS);
+
+        if (panierExistant.isPresent()) {
+            return panierExistant.get();
+        } else {
+            // Création automatique d'un panier si l'utilisateur n'en a pas
+            Panier nouveauPanier = new Panier();
+            nouveauPanier.setUtilisateur(utilisateur);
+            nouveauPanier.setStatus(Panier.StatutPanier.EN_COURS);
+            nouveauPanier.setPrixtotalPa(BigDecimal.ZERO);
+            return panierRepository.save(nouveauPanier);
+        }
     }
 
     @Transactional
-    public void supprimerPanier(Integer panierId) {
+    public Panier supprimerProduitEntier(SupprimerProduitEntierDTO dto) {
+        Panier panier = panierRepository.findById(dto.getIdPanier())
+                .orElseThrow(() -> new RuntimeException("Panier non trouvé"));
+
+        // Trouver la ligne correspondant au produit
+        Constituer ligne = null;
+        for (Constituer l : panier.getLignes()) {
+            if (l.getId().getProduitId().equals(dto.getIdProduit())) {
+                ligne = l;
+                break;
+            }
+        }
+
+        if (ligne != null) {
+            // Supprimer complètement la ligne
+            panier.getLignes().remove(ligne);
+            // Important: mettre à jour la référence du panier dans la ligne
+            ligne.setPanier(null);
+            constituerRepository.delete(ligne);
+
+            // Recalculer le prix total
+            BigDecimal nouveauTotal = calculerPrixTotal(panier);
+            panier.setPrixtotalPa(nouveauTotal);
+
+            // Sauvegarder le panier après la modification
+            return panierRepository.save(panier);
+        } else {
+            throw new RuntimeException("Le produit n'existe pas dans le panier");
+        }
+    }
+
+    // Nouvelle méthode pour vider un panier (au lieu de le supprimer)
+    @Transactional
+    public Panier viderPanier(Integer panierId) {
         Panier panier = panierRepository.findById(panierId)
                 .orElseThrow(() -> new RuntimeException("Panier non trouvé"));
 
-        // Vérification optionnelle : on peut choisir de n'autoriser que la suppression des paniers en cours
+        // Vérification optionnelle : on peut choisir de n'autoriser que de vider les paniers en cours
         if (panier.getStatus() != Panier.StatutPanier.EN_COURS) {
-            throw new RuntimeException("Seuls les paniers en cours peuvent être supprimés");
+            throw new RuntimeException("Seuls les paniers en cours peuvent être vidés");
         }
 
-        // Supprimer toutes les lignes du panier d'abord (relations)
+        // Supprimer toutes les lignes du panier
         List<Constituer> lignes = constituerRepository.findByPanierId(panierId);
         constituerRepository.deleteAll(lignes);
 
-        // Puis supprimer le panier
-        panierRepository.delete(panier);
+        // Réinitialiser le prix total
+        panier.setPrixtotalPa(BigDecimal.ZERO);
+
+        return panierRepository.save(panier);
     }
 
     @Transactional

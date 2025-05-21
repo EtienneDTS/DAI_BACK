@@ -1,6 +1,7 @@
 package com.pickandgo.model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,7 +18,8 @@ public class Panier {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "idPa", nullable = false)
-    private Integer id;
+    @JsonProperty("idPanier")
+    private Integer idPanier;
 
     @Column(name = "prixtotalPa", precision = 10, scale = 2)
     private BigDecimal prixtotalPa = BigDecimal.ZERO;
