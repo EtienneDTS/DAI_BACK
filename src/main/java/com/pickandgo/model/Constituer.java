@@ -17,15 +17,14 @@ public class Constituer {
     private ConstituerPK id;
 
     @ManyToOne
-    @MapsId("panierId")
+    @MapsId("panierId") // Référence à la propriété dans ConstituerPK
     @JoinColumn(name = "idPa")
     @JsonBackReference
     private Panier panier;
 
     @ManyToOne
-    @MapsId("produitId")
+    @MapsId("produitId") // Référence à la propriété dans ConstituerPK
     @JoinColumn(name = "idP")
-    @JsonIdentityReference(alwaysAsId = true)
     private Produit produit;
 
     @Column(name = "quantiteP")

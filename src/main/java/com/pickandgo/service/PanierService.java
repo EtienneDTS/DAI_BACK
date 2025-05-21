@@ -61,7 +61,7 @@ public class PanierService {
         }
 
         // Chercher si ce produit est déjà dans le panier
-        Optional<Constituer> ligneExistante = constituerRepository.findByPanierIdAndProduitId(
+        Optional<Constituer> ligneExistante = constituerRepository.findByPanier_IdPanierAndProduit_Id(
                 panier.getIdPanier(), produit.getId());
 
         if (ligneExistante.isPresent()) {
@@ -125,7 +125,6 @@ public class PanierService {
             // Supprimer complètement la ligne
             panier.getLignes().remove(ligne);
             // Important: mettre à jour la référence du panier dans la ligne
-            ligne.setPanier(null);
             constituerRepository.delete(ligne);
 
             // Recalculer le prix total
@@ -151,7 +150,7 @@ public class PanierService {
         }
 
         // Supprimer toutes les lignes du panier
-        List<Constituer> lignes = constituerRepository.findByPanierId(panierId);
+        List<Constituer> lignes = constituerRepository.findByPanier_IdPanier(panierId);
         constituerRepository.deleteAll(lignes);
 
         // Réinitialiser le prix total
@@ -179,7 +178,6 @@ public class PanierService {
                 // Supprimer complètement la ligne
                 panier.getLignes().remove(ligne);
                 // Important: mettre à jour la référence du panier dans la ligne
-                ligne.setPanier(null);
                 constituerRepository.delete(ligne);
             } else {
                 // Réduire la quantité

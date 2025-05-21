@@ -66,6 +66,11 @@
             <artifactId>jackson-annotations</artifactId>
             <version>2.18.2</version>
         </dependency>
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations</artifactId>
+            <version>2.2.21</version>
+        </dependency>
     </dependencies>
 
     <build>
