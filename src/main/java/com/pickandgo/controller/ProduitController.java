@@ -1,7 +1,12 @@
 package com.pickandgo.controller;
 
+import com.pickandgo.dto.NouveauProduitDTO;
 import com.pickandgo.model.Produit;
 import com.pickandgo.service.ProduitService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/produits")
 @CrossOrigin(origins = "http://localhost:5173")
+@Tag(name = "Produit", description = "API pour la gestion des produits")
 public class ProduitController {
 
     private final ProduitService produitService;
@@ -32,5 +38,17 @@ public class ProduitController {
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Produit non trouvé avec l'ID: " + id);
         }
+    }
+
+    @PostMapping
+    @Operation(summary = "Créer un nouveau produit")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Produit créé avec succès"),
+            @ApiResponse(responseCode = "400", description = "Requête invalide (champs manquants ou erronés)"),
+            @ApiResponse(responseCode = "500", description = "Erreur interne du serveur")
+    })
+    public ResponseEntity<Produit> creerProduit(@RequestBody NouveauProduitDTO nouveauProduitDTO) {
+        Produit produitCree = produitService.creerProduit(nouveauProduitDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(produitCree);
     }
 }
