@@ -7,6 +7,7 @@ import com.pickandgo.repository.ProduitRepository;
 import com.pickandgo.repository.UtilisateurRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -29,10 +30,12 @@ public class ListeDeCourseService {
         this.listerRepository = listerRepository;
     }
 
+    @Transactional
     public List<ListeDeCourse> getListesByUtilisateur(Integer utilisateurId) {
         return listeDeCourseRepository.findByUtilisateurId(utilisateurId);
     }
 
+    @Transactional
     public ListeDeCourse createListe(String nom, Integer idUtilisateur) {
         Utilisateur utilisateur = utilisateurRepository.findById(idUtilisateur)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
@@ -44,6 +47,7 @@ public class ListeDeCourseService {
         return listeDeCourseRepository.save(listeDeCourse);
     }
 
+    @Transactional
     public void ajouterProduitDansListe(Integer idListe, Integer idProduit, Integer quantite) {
         ListeDeCourse liste = listeDeCourseRepository.findById(idListe)
                 .orElseThrow(() -> new RuntimeException("Liste non trouvée"));
@@ -64,6 +68,7 @@ public class ListeDeCourseService {
         listerRepository.save(lister);
     }
 
+    @Transactional
     public void supprimerProduitDeListe(Integer idListe, Integer idProduit) {
         listerRepository.deleteByIdIdLAndIdIdP(idListe, idProduit);
     }
