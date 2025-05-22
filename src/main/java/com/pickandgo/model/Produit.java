@@ -18,43 +18,43 @@ public class Produit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "idP", nullable = false)
-    @JsonProperty("id")
+    @JsonProperty("idP")
     private Integer id;
 
     @Size(max = 100)
     @Column(name = "nomP", length = 100)
-    @JsonProperty("nom")
+    @JsonProperty("nomP")
     private String nomP;
 
     @Column(name = "prixUnitaireP", precision = 10, scale = 2)
-    @JsonProperty("prixUnitaire")
+    @JsonProperty("prixUnitaireP")
     private BigDecimal prixUnitaireP;
 
     @Column(name = "prixKgP", precision = 10, scale = 2)
-    @JsonProperty("prixKg")
+    @JsonProperty("prixKgP")
     private BigDecimal prixKgP;
 
     @Column(name = "poidsP")
-    @JsonProperty("poid")
+    @JsonProperty("poidsP")
     private Integer poidsP;
 
     @Size(max = 10)
     @Column(name = "nutriP", length = 10)
-    @JsonProperty("nutriScore")
+    @JsonProperty("nutriP")
     private String nutriP;
 
     @Size(max = 100)
     @Column(name = "conditionnementP", length = 100)
-    @JsonProperty("conditionnement")
+    @JsonProperty("conditionnementP")
     private String conditionnementP;
 
     @Column(name = "bioP")
-    @JsonProperty("bio")
+    @JsonProperty("bioP")
     private Boolean bioP;
 
     @Size(max = 100)
     @Column(name = "marqueP", length = 100)
-    @JsonProperty("marque")
+    @JsonProperty("marqueP")
     private String marqueP;
 
     @Size(max = 255)
