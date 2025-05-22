@@ -2,6 +2,7 @@ package com.pickandgo.controller;
 
 import com.pickandgo.model.ListeDeCourse;
 import com.pickandgo.model.Lister;
+import com.pickandgo.model.PostIt;
 import com.pickandgo.service.ListeDeCourseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -110,6 +111,61 @@ public class ListeDeCourseController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Liste non trouvée.");
         }
     }
+
+    // Afficher une seule liste avec ses produits et ses post-its
+    @GetMapping("/{idListe}")
+    public ResponseEntity<Map<String, Object>> getListeParId(@PathVariable Integer idListe) {
+        Optional<ListeDeCourse> listeOpt = listeDeCourseService.getListeParId(idListe);
+
+        if (listeOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+
+        ListeDeCourse liste = listeOpt.get();
+        Map<String, Object> listeMap = new HashMap<>();
+        listeMap.put("id", liste.getId());
+        listeMap.put("noml", liste.getNoml());
+
+        // Produits avec quantités
+        List<Map<String, Object>> produitsAvecQuantite = new ArrayList<>();
+        for (Lister lister : liste.getLiaisonsProduits()) {
+            Map<String, Object> produitMap = new HashMap<>();
+            produitMap.put("produit", lister.getProduit());
+            produitMap.put("quantite", lister.getQuantite());
+            produitsAvecQuantite.add(produitMap);
+        }
+        listeMap.put("produits", produitsAvecQuantite);
+
+        // Post-its
+        List<PostIt> postIts = liste.getPostIts(); // ← nécessite que tu aies bien mappé les post-its dans ListeDeCourse
+        listeMap.put("postIts", postIts);
+
+        return ResponseEntity.ok(listeMap);
+    }
+
+
+
+    // GESTION DES POSTS IT //
+    @PostMapping("/{idListe}/postits")
+    public ResponseEntity<PostIt> ajouterPostItVide(@PathVariable Integer idListe) {
+        PostIt postItCree = listeDeCourseService.ajouterPostItVide(idListe);
+        return ResponseEntity.status(HttpStatus.CREATED).body(postItCree);
+    }
+
+    @PutMapping("/postits/{idPostIt}")
+    public ResponseEntity<PostIt> modifierPostIt(@PathVariable Integer idPostIt, @RequestBody Map<String, String> payload) {
+        String nouveauTexte = payload.get("texte");
+        PostIt postItModifie = listeDeCourseService.modifierPostIt(idPostIt, nouveauTexte);
+        return ResponseEntity.ok(postItModifie);
+    }
+
+    @DeleteMapping("/postits/{idPostIt}")
+    public ResponseEntity<Void> supprimerPostIt(@PathVariable Integer idPostIt) {
+        listeDeCourseService.supprimerPostIt(idPostIt);
+        return ResponseEntity.noContent().build();
+    }
+
+
 
 }
 
