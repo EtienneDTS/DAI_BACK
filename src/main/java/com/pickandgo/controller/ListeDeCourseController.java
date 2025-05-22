@@ -166,6 +166,20 @@ public class ListeDeCourseController {
     }
 
 
+    @DeleteMapping("/{idListe}/produits/{idProduit}")
+    public ResponseEntity<String> supprimerProduitDeListe(
+            @PathVariable Integer idListe,
+            @PathVariable Integer idProduit) {
+
+        boolean success = listeDeCourseService.supprimerProduitDeListe(idListe, idProduit);
+
+        if (success) {
+            return ResponseEntity.ok("Produit supprimé de la liste.");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Produit non trouvé dans la liste.");
+        }
+    }
+
 
 }
 

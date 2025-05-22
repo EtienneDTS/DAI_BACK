@@ -66,10 +66,6 @@ public class ListeDeCourseService {
         listerRepository.save(lister);
     }
 
-    @Transactional
-    public void supprimerProduitDeListe(Integer idListe, Integer idProduit) {
-        listerRepository.deleteByIdIdLAndIdIdP(idListe, idProduit);
-    }
 
     @Transactional
     public boolean mettreAJourQuantite(Integer idListe, Integer idProduit, int nouvelleQuantite) {
@@ -138,6 +134,19 @@ public class ListeDeCourseService {
 
         postItRepository.deleteById(idPostIt);
     }
+
+    @Transactional
+    public boolean supprimerProduitDeListe(Integer idListe, Integer idProduit) {
+        Optional<Lister> liaison = listerRepository.findByListeIdAndProduitId(idListe, idProduit);
+
+        if (liaison.isPresent()) {
+            listerRepository.delete(liaison.get());
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 
 
 
