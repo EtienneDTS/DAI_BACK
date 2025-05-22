@@ -1,8 +1,7 @@
 package com.pickandgo.controller;
 
-import com.pickandgo.dto.ListeDeCourseDTO;
+
 import com.pickandgo.model.ListeDeCourse;
-import com.pickandgo.model.Lister;
 import com.pickandgo.service.ListeDeCourseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

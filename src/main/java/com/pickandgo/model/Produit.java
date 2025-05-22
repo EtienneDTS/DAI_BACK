@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -64,4 +66,36 @@ public class Produit {
     @JoinColumn(name = "idCate")
     private Categorie idCate;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "idR")
+    private Rayon rayon;
+
+    @ManyToMany
+    @JoinTable(
+            name = "Definir",
+            joinColumns = @JoinColumn(name = "idP"),
+            inverseJoinColumns = @JoinColumn(name = "idMc")
+    )
+    private List<MotCle> motsCles = new ArrayList<>();
+
+    @Transient
+    @JsonProperty("categorie")
+    public String getNomCategorie() {
+        return idCate != null ? idCate.getNomCate() : null;
+    }
+
+    @Transient
+    @JsonProperty("rayon")
+    public String getNomRayon() {
+        return rayon != null ? rayon.getNomR() : null;
+    }
+
+    @Transient
+    @JsonProperty("motsCles")
+    public List<String> getListeMotsCles() {
+        return motsCles.stream()
+                .map(MotCle::getMotMc)
+                .toList();
+    }
 }
+
