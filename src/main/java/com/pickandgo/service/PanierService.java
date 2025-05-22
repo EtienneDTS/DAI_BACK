@@ -101,7 +101,8 @@ public class PanierService {
         }
     }
 
-    private void mettreAJourPrixTotalPanier(Panier panier) {
+    @Transactional
+    public void mettreAJourPrixTotalPanier(Panier panier) {
         panier.setPrixtotalPa(calculerPrixTotal(panier));
     }
 
@@ -126,8 +127,8 @@ public class PanierService {
 
         return panierRepository.save(panier);
     }
-
-    private BigDecimal calculerPrixTotal(Panier panier) {
+    @Transactional
+    public BigDecimal calculerPrixTotal(Panier panier) {
         BigDecimal total = BigDecimal.ZERO;
         for (Constituer ligne : panier.getLignes()) {
             BigDecimal prixLigne = ligne.getProduit().getPrixUnitaireP()

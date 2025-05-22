@@ -46,10 +46,12 @@ public class ProduitService {
         return produitRepository.save(nouveauProduit);
     }
 
+    @Transactional
     public List<Produit> getAllProduits() {
         return produitRepository.findAll();
     }
 
+    @Transactional
     public Produit getProduitById(Integer id) {
         return produitRepository.findById(id).orElse(null);
     }
