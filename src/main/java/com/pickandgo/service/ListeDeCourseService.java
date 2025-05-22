@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ListeDeCourseService {
@@ -67,4 +68,33 @@ public class ListeDeCourseService {
     public void supprimerProduitDeListe(Integer idListe, Integer idProduit) {
         listerRepository.deleteByIdIdLAndIdIdP(idListe, idProduit);
     }
+
+    public boolean mettreAJourQuantite(Integer idListe, Integer idProduit, int nouvelleQuantite) {
+        Optional<Lister> listerOpt = listerRepository.findById(new ListerId(idListe, idProduit));
+
+        if (listerOpt.isPresent()) {
+            if (nouvelleQuantite == 0) {
+                listerRepository.delete(listerOpt.get());
+            } else {
+                Lister lister = listerOpt.get();
+                lister.setQuantite(nouvelleQuantite);
+                listerRepository.save(lister);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public boolean supprimerListeParId(Integer idListe) {
+        Optional<ListeDeCourse> listeOpt = listeDeCourseRepository.findById(idListe);
+
+        if (listeOpt.isPresent()) {
+            listeDeCourseRepository.deleteById(idListe);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+
 }

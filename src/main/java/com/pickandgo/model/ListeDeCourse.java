@@ -27,6 +27,7 @@ public class ListeDeCourse {
     @JoinColumn(name = "idU")
     private Utilisateur utilisateur;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "liste", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Lister> liaisonsProduits = new ArrayList<>();
 
