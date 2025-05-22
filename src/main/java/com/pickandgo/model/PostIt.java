@@ -1,5 +1,6 @@
 package com.pickandgo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,5 +17,10 @@ public class PostIt {
     @Lob
     @Column(name = "texte")
     private String texte;
+
+    @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "idL", nullable = false)
+    private ListeDeCourse liste;
 
 }

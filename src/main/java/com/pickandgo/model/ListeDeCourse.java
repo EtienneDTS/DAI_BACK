@@ -38,5 +38,7 @@ public class ListeDeCourse {
                 .toList(); // ou .collect(Collectors.toList()) si tu es en Java 8
     }
 
+    @OneToMany(mappedBy = "liste", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PostIt> postIts = new ArrayList<>();
 
 }

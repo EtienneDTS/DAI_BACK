@@ -1,10 +1,7 @@
 package com.pickandgo.service;
 
 import com.pickandgo.model.*;
-import com.pickandgo.repository.ListeDeCourseRepository;
-import com.pickandgo.repository.ListerRepository;
-import com.pickandgo.repository.ProduitRepository;
-import com.pickandgo.repository.UtilisateurRepository;
+import com.pickandgo.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -74,6 +71,7 @@ public class ListeDeCourseService {
         listerRepository.deleteByIdIdLAndIdIdP(idListe, idProduit);
     }
 
+    @Transactional
     public boolean mettreAJourQuantite(Integer idListe, Integer idProduit, int nouvelleQuantite) {
         Optional<Lister> listerOpt = listerRepository.findById(new ListerId(idListe, idProduit));
 
@@ -90,6 +88,7 @@ public class ListeDeCourseService {
         return false;
     }
 
+    @Transactional
     public boolean supprimerListeParId(Integer idListe) {
         Optional<ListeDeCourse> listeOpt = listeDeCourseRepository.findById(idListe);
 
@@ -100,6 +99,46 @@ public class ListeDeCourseService {
             return false;
         }
     }
+
+    @Transactional
+    public Optional<ListeDeCourse> getListeParId(Integer idListe) {
+        return listeDeCourseRepository.findById(idListe);
+    }
+
+
+    @Autowired
+    private PostItRepository postItRepository;
+
+    @Transactional
+    public PostIt ajouterPostItVide(Integer idListe) {
+        ListeDeCourse liste = listeDeCourseRepository.findById(idListe)
+                .orElseThrow(() -> new RuntimeException("Liste non trouvée"));
+
+        PostIt postIt = new PostIt();
+        postIt.setTexte("");
+        postIt.setListe(liste);
+
+        return postItRepository.save(postIt);
+    }
+
+    @Transactional
+    public PostIt modifierPostIt(Integer idPostIt, String nouveauTexte) {
+        PostIt postIt = postItRepository.findById(idPostIt)
+                .orElseThrow(() -> new RuntimeException("Post-it non trouvé"));
+
+        postIt.setTexte(nouveauTexte);
+        return postItRepository.save(postIt);
+    }
+
+    @Transactional
+    public void supprimerPostIt(Integer idPostIt) {
+        if (!postItRepository.existsById(idPostIt)) {
+            throw new RuntimeException("Post-it non trouvé");
+        }
+
+        postItRepository.deleteById(idPostIt);
+    }
+
 
 
 }
