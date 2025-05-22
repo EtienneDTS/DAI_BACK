@@ -1,9 +1,9 @@
 package com.pickandgo.service;
 
-import com.pickandgo.dto.ListeDeCourseDTO;
-import com.pickandgo.model.ListeDeCourse;
-import com.pickandgo.model.Utilisateur;
+import com.pickandgo.model.*;
 import com.pickandgo.repository.ListeDeCourseRepository;
+import com.pickandgo.repository.ListerRepository;
+import com.pickandgo.repository.ProduitRepository;
 import com.pickandgo.repository.UtilisateurRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,26 +15,56 @@ public class ListeDeCourseService {
 
     private final ListeDeCourseRepository listeDeCourseRepository;
     private final UtilisateurRepository utilisateurRepository;
+    private final ProduitRepository produitRepository;
+    private final ListerRepository listerRepository;
 
     @Autowired
     public ListeDeCourseService(ListeDeCourseRepository listeDeCourseRepository,
-                                UtilisateurRepository utilisateurRepository) {
+                                UtilisateurRepository utilisateurRepository,
+                                ProduitRepository produitRepository,
+                                ListerRepository listerRepository) {
         this.listeDeCourseRepository = listeDeCourseRepository;
         this.utilisateurRepository = utilisateurRepository;
+        this.produitRepository = produitRepository;
+        this.listerRepository = listerRepository;
     }
 
     public List<ListeDeCourse> getListesByUtilisateur(Integer utilisateurId) {
         return listeDeCourseRepository.findByUtilisateurId(utilisateurId);
     }
 
-    public ListeDeCourse createListe(ListeDeCourseDTO listeDeCourseDTO) {
-        Utilisateur utilisateur = utilisateurRepository.findById(listeDeCourseDTO.getIdUtilisateur())
+    public ListeDeCourse createListe(String nom, Integer idUtilisateur) {
+        Utilisateur utilisateur = utilisateurRepository.findById(idUtilisateur)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
         ListeDeCourse listeDeCourse = new ListeDeCourse();
-        listeDeCourse.setNoml(listeDeCourseDTO.getNom());
+        listeDeCourse.setNoml(nom);
         listeDeCourse.setUtilisateur(utilisateur);
 
         return listeDeCourseRepository.save(listeDeCourse);
+    }
+
+    public void ajouterProduitDansListe(Integer idListe, Integer idProduit, Integer quantite) {
+        ListeDeCourse liste = listeDeCourseRepository.findById(idListe)
+                .orElseThrow(() -> new RuntimeException("Liste non trouvée"));
+
+        Produit produit = produitRepository.findById(idProduit)
+                .orElseThrow(() -> new RuntimeException("Produit non trouvé"));
+
+        ListerId listerId = new ListerId();
+        listerId.setIdL(idListe);
+        listerId.setIdP(idProduit);
+
+        Lister lister = new Lister();
+        lister.setId(listerId);
+        lister.setListe(liste);
+        lister.setProduit(produit);
+        lister.setQuantite(quantite);
+
+        listerRepository.save(lister);
+    }
+
+    public void supprimerProduitDeListe(Integer idListe, Integer idProduit) {
+        listerRepository.deleteByIdIdLAndIdIdP(idListe, idProduit);
     }
 }
