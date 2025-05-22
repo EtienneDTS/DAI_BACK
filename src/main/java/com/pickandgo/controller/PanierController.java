@@ -1,10 +1,10 @@
 package com.pickandgo.controller;
 
-import com.pickandgo.dto.AjoutProduitPanierDTO;
+import com.pickandgo.dto.ModifierQuantiteProduitDTO;
 import com.pickandgo.dto.SupprimerProduitEntierDTO;
-import com.pickandgo.dto.SupprimerProduitPanierDTO;
 import com.pickandgo.model.Panier;
 import com.pickandgo.service.PanierService;
+import org.springframework.security.core.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +14,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/paniers")
@@ -39,26 +42,15 @@ public class PanierController {
         return ResponseEntity.ok(panier);
     }
 
-    @PostMapping("/ajouter-produit")
-    @Operation(summary = "Ajouter un produit au panier")
+    @PostMapping("/modifier-quantite")
+    @Operation(summary = "Modifier la quantité d'un produit dans le panier")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Produit ajouté avec succès"),
-            @ApiResponse(responseCode = "404", description = "Utilisateur ou produit non trouvé")
+            @ApiResponse(responseCode = "200", description = "Quantité modifiée avec succès"),
+            @ApiResponse(responseCode = "404", description = "Panier ou produit non trouvé")
     })
-    public ResponseEntity<Panier> ajouterProduit(@RequestBody AjoutProduitPanierDTO dto) {
-        Panier panier = panierService.ajouterProduitAuPanier(dto);
+    public ResponseEntity<Panier> modifierQuantiteProduit(@RequestBody ModifierQuantiteProduitDTO dto) {
+        Panier panier = panierService.modifierQuantiteProduit(dto);
         return ResponseEntity.status(HttpStatus.OK).body(panier);
-    }
-
-    @PostMapping("/supprimer-produit")
-    @Operation(summary = "Supprimer un produit du panier")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Produit supprimé avec succès"),
-            @ApiResponse(responseCode = "404", description = "Produit non trouvé dans le panier")
-    })
-    public ResponseEntity<Panier> supprimerProduit(@RequestBody SupprimerProduitPanierDTO dto) {
-        Panier panier = panierService.supprimerProduitDuPanier(dto);
-        return ResponseEntity.ok(panier);
     }
 
     @PostMapping("/supprimer-produit-entier")
@@ -71,25 +63,75 @@ public class PanierController {
         Panier panier = panierService.supprimerProduitEntier(dto);
         return ResponseEntity.ok(panier);
     }
-
-    @PutMapping("/{id}/confirmer")
-    @Operation(summary = "Confirmer un panier pour la préparation")
+    @PutMapping("/{id}/passer-commande")
+    @Operation(summary = "Passer une commande à partir du panier")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Panier confirmé avec succès"),
-            @ApiResponse(responseCode = "400", description = "Le panier ne peut pas être confirmé"),
+            @ApiResponse(responseCode = "200", description = "Commande passée avec succès"),
+            @ApiResponse(responseCode = "400", description = "Le panier ne peut pas être commandé"),
+            @ApiResponse(responseCode = "401", description = "Authentification requise"),
             @ApiResponse(responseCode = "404", description = "Panier non trouvé")
     })
-    public ResponseEntity<Panier> confirmerPanier(@PathVariable Integer id) {
-        Panier panier = panierService.confirmerPanier(id);
+    public ResponseEntity<?> passerCommande(
+            @PathVariable Integer id,
+            @RequestParam(required = false) String sessionId,
+            Authentication authentication) {
+        try {
+            // Si utilisateur connecté
+            if (authentication != null && authentication.isAuthenticated()) {
+                Panier panier = panierService.passerCommande(id, authentication);
+                return ResponseEntity.ok(panier);
+            }
+            // Si panier anonyme
+            else if (sessionId != null && !sessionId.isEmpty()) {
+                // Renvoyer une réponse 401 avec l'ID du panier pour permettre la redirection
+                Map<String, Object> response = new HashMap<>();
+                response.put("message", "Authentification requise");
+                response.put("panierId", id);
+                response.put("sessionId", sessionId);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            } else {
+                throw new RuntimeException("Vous devez vous connecter pour passer commande");
+            }
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("connecter pour passer commande")) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("message", "Authentification requise");
+                response.put("panierId", id);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+            throw e;
+        }
+    }
+    @PutMapping("/{id}/demarrer-preparation")
+    @Operation(summary = "Démarrer la préparation d'une commande")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Préparation démarrée avec succès"),
+            @ApiResponse(responseCode = "400", description = "La commande ne peut pas être préparée"),
+            @ApiResponse(responseCode = "404", description = "Commande non trouvée")
+    })
+    public ResponseEntity<Panier> demarrerPreparation(@PathVariable Integer id) {
+        Panier panier = panierService.demarrerPreparation(id);
+        return ResponseEntity.ok(panier);
+    }
+
+    @PutMapping("/{id}/terminer-preparation")
+    @Operation(summary = "Terminer la préparation d'une commande")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Préparation terminée avec succès"),
+            @ApiResponse(responseCode = "400", description = "La commande ne peut pas être marquée comme prête"),
+            @ApiResponse(responseCode = "404", description = "Commande non trouvée")
+    })
+    public ResponseEntity<Panier> terminerPreparation(@PathVariable Integer id) {
+        Panier panier = panierService.terminerPreparation(id);
         return ResponseEntity.ok(panier);
     }
 
     @PutMapping("/{id}/recuperer")
-    @Operation(summary = "Marquer un panier comme récupéré")
+    @Operation(summary = "Marquer une commande comme récupérée")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Panier marqué comme récupéré avec succès"),
-            @ApiResponse(responseCode = "400", description = "Le panier ne peut pas être marqué comme récupéré"),
-            @ApiResponse(responseCode = "404", description = "Panier non trouvé")
+            @ApiResponse(responseCode = "200", description = "Commande marquée comme récupérée avec succès"),
+            @ApiResponse(responseCode = "400", description = "La commande ne peut pas être marquée comme récupérée"),
+            @ApiResponse(responseCode = "404", description = "Commande non trouvée")
     })
     public ResponseEntity<Panier> marquerCommeRecupere(@PathVariable Integer id) {
         Panier panier = panierService.marquerCommeRecupere(id);
@@ -106,4 +148,28 @@ public class PanierController {
         Panier panier = panierService.viderPanier(id);
         return ResponseEntity.ok(panier);
     }
+
+    @PostMapping("/modifier-quantite-anonyme")
+    @Operation(summary = "Modifier la quantité d'un produit dans un panier anonyme")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Quantité modifiée avec succès"),
+            @ApiResponse(responseCode = "404", description = "Produit non trouvé")
+    })
+    public ResponseEntity<Panier> modifierQuantiteProduitAnonyme(
+            @RequestBody ModifierQuantiteProduitDTO dto,
+            @RequestParam String sessionId) {
+        Panier panier = panierService.modifierQuantiteProduitAnonyme(dto, sessionId);
+        return ResponseEntity.status(HttpStatus.OK).body(panier);
+    }
+
+    @PostMapping("/fusionner/{panierId}")
+    @Operation(summary = "Fusionner un panier anonyme avec le panier de l'utilisateur connecté")
+    public ResponseEntity<Void> fusionnerPaniers(
+            @PathVariable Integer panierId,
+            @RequestParam String sessionId) {
+        panierService.fusionnerPanierAnonymeVersUtilisateur(sessionId, panierId);
+        return ResponseEntity.ok().build();
+    }
+
+
 }

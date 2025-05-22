@@ -26,7 +26,7 @@ public class Panier {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 50)
-    private StatutPanier status = StatutPanier.EN_COURS;
+    private StatutPanier status = StatutPanier.PANIER;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idU")
@@ -37,8 +37,10 @@ public class Panier {
     private List<Constituer> lignes = new ArrayList<>();
 
     public enum StatutPanier {
-        EN_COURS,
-        CONFIRME,
+        PANIER,
+        COMMANDE,
+        EN_PREPARATION,
+        PRET,
         RECUPERE
     }
 }
