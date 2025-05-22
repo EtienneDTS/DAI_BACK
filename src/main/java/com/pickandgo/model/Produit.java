@@ -18,43 +18,43 @@ public class Produit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "idP", nullable = false)
-    @JsonProperty("idP")
+    @JsonProperty("id")
     private Integer id;
 
     @Size(max = 100)
     @Column(name = "nomP", length = 100)
-    @JsonProperty("nomP")
+    @JsonProperty("nom")
     private String nomP;
 
     @Column(name = "prixUnitaireP", precision = 10, scale = 2)
-    @JsonProperty("prixUnitaireP")
+    @JsonProperty("prixUnitaire")
     private BigDecimal prixUnitaireP;
 
     @Column(name = "prixKgP", precision = 10, scale = 2)
-    @JsonProperty("prixKgP")
+    @JsonProperty("prixKg")
     private BigDecimal prixKgP;
 
     @Column(name = "poidsP")
-    @JsonProperty("poidsP")
+    @JsonProperty("poids")
     private Integer poidsP;
 
     @Size(max = 10)
     @Column(name = "nutriP", length = 10)
-    @JsonProperty("nutriP")
+    @JsonProperty("nutri")
     private String nutriP;
 
     @Size(max = 100)
     @Column(name = "conditionnementP", length = 100)
-    @JsonProperty("conditionnementP")
+    @JsonProperty("conditionnement")
     private String conditionnementP;
 
     @Column(name = "bioP")
-    @JsonProperty("bioP")
+    @JsonProperty("bio")
     private Boolean bioP;
 
     @Size(max = 100)
     @Column(name = "marqueP", length = 100)
-    @JsonProperty("marqueP")
+    @JsonProperty("marque")
     private String marqueP;
 
     @Size(max = 255)
@@ -70,7 +70,7 @@ public class Produit {
     @JoinColumn(name = "idR")
     private Rayon rayon;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "Definir",
             joinColumns = @JoinColumn(name = "idP"),
