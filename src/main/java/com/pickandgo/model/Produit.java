@@ -70,6 +70,10 @@ public class Produit {
     @JoinColumn(name = "idR")
     private Rayon rayon;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "idPr")
+    private Promotion promotion;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "Definir",
@@ -96,6 +100,12 @@ public class Produit {
         return motsCles.stream()
                 .map(MotCle::getMotMc)
                 .toList();
+    }
+
+    @Transient
+    @JsonProperty("promotion")
+    public Promotion getPromotion() {
+        return promotion;
     }
 }
 

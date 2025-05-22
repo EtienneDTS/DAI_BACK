@@ -1,5 +1,6 @@
 package com.pickandgo.dto;
 
+import com.pickandgo.model.Promotion;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,4 +19,5 @@ public class NouveauProduitDTO {
     private String marqueP;
     private String urlImage;
     private Integer categorieId;
+    private Promotion promotion;
 }
