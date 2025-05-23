@@ -329,7 +329,7 @@ public class PanierService {
         Panier panierAnonyme = panierRepository.findById(panierAnonymeId)
                 .orElseThrow(() -> new RuntimeException("Panier anonyme non trouvé"));
 
-        // 2. Récupérer ou créer le panier de l'utilisateur connecté
+        // 2. Récupérer ou créer le panier utilisateur
         Optional<Panier> panierUtilisateurOpt = panierRepository.findByUtilisateurIdAndStatus(
                 utilisateurId, Panier.StatutPanier.PANIER);
 
@@ -350,41 +350,35 @@ public class PanierService {
 
         // 3. Transférer tous les produits du panier anonyme vers le panier utilisateur
         for (Constituer ligne : panierAnonyme.getLignes()) {
-            // Ajouter ou fusionner chaque produit dans le panier utilisateur
             ModifierQuantiteProduitDTO dto = new ModifierQuantiteProduitDTO();
             dto.setIdPanier(panierUtilisateur.getIdPanier());
             dto.setIdProduit(ligne.getProduit().getId());
 
-            // Vérifier si le produit existe déjà dans le panier utilisateur
             Optional<Constituer> ligneUtilisateurOpt = constituerRepository.findByPanier_IdPanierAndProduit_Id(
                     panierUtilisateur.getIdPanier(), ligne.getProduit().getId());
 
             if (ligneUtilisateurOpt.isPresent()) {
-                // Ajouter les quantités
                 dto.setNouvelleQuantite(ligneUtilisateurOpt.get().getQuantite() + ligne.getQuantite());
             } else {
-                // Ajouter le produit avec la même quantité
                 dto.setNouvelleQuantite(ligne.getQuantite());
             }
 
             modifierQuantiteProduit(dto);
         }
 
-        // 4. Supprimer les lignes du panier anonyme puis le panier anonyme
+        // 4. Supprimer le panier anonyme et l'utilisateur anonyme
         List<Constituer> lignes = constituerRepository.findByPanier_IdPanier(panierAnonyme.getIdPanier());
         constituerRepository.deleteAll(lignes);
         panierRepository.delete(panierAnonyme);
 
-        // 5. Supprimer l'utilisateur anonyme
         Utilisateur utilisateurAnonyme = panierAnonyme.getUtilisateur();
         if (utilisateurAnonyme != null && utilisateurAnonyme.getEmailU().startsWith("anonyme_")) {
             utilisateurRepository.delete(utilisateurAnonyme);
         }
 
-        // 6. Passer le panier utilisateur en commande
+        // 5. Créer une commande à partir du panier utilisateur
         return passerCommande(panierUtilisateur.getIdPanier());
     }
-
     // Méthode pour passer une commande avec authentification
     @Transactional
     public Panier passerCommande(Integer panierId, Authentication authentication) {
@@ -416,29 +410,54 @@ public class PanierService {
             panierRepository.save(panier);
         }
 
-        // Continuer avec la logique normale de commande
+        // Continuer avec la logique nouvelle de commande
         return passerCommande(panierId);
     }
 
-    // Méthode existante améliorée
     @Transactional
     public Panier passerCommande(Integer panierId) {
-        Panier panier = panierRepository.findById(panierId)
+        // Récupérer le panier d'origine
+        Panier panierOriginal = panierRepository.findById(panierId)
                 .orElseThrow(() -> new RuntimeException("Panier non trouvé"));
 
         // Vérifier que le panier n'est pas vide
-        if (panier.getLignes().isEmpty()) {
+        if (panierOriginal.getLignes().isEmpty()) {
             throw new RuntimeException("Impossible de passer une commande avec un panier vide");
         }
 
-        // Passer à l'état COMMANDE
-        panier.setStatus(Panier.StatutPanier.COMMANDE);
+        // Créer un nouveau panier pour la commande
+        Panier panierCommande = new Panier();
+        panierCommande.setUtilisateur(panierOriginal.getUtilisateur());
+        panierCommande.setStatus(Panier.StatutPanier.COMMANDE);
+        panierCommande.setPrixtotalPa(panierOriginal.getPrixtotalPa());
 
-        // Ajouter la date de commande si un champ existe pour cela
-        // Comme ce champ n'est pas présent dans le modèle fourni, cette ligne est commentée
-        // panier.setDateCommande(LocalDateTime.now());
+        // Sauvegarder le nouveau panier
+        panierCommande = panierRepository.save(panierCommande);
 
-        return panierRepository.save(panier);
+        // Copier les produits du panier original vers le panier commande
+        for (Constituer ligneOriginal : panierOriginal.getLignes()) {
+            Constituer ligneCommande = new Constituer();
+            ConstituerPK pkCommande = new ConstituerPK();
+            pkCommande.setPanierId(panierCommande.getIdPanier());
+            pkCommande.setProduitId(ligneOriginal.getProduit().getId());
+
+            ligneCommande.setId(pkCommande);
+            ligneCommande.setPanier(panierCommande);
+            ligneCommande.setProduit(ligneOriginal.getProduit());
+            ligneCommande.setQuantite(ligneOriginal.getQuantite());
+
+            constituerRepository.save(ligneCommande);
+            panierCommande.getLignes().add(ligneCommande);
+        }
+
+        // Vider le panier original (supprimer toutes les lignes)
+        List<Constituer> lignes = constituerRepository.findByPanier_IdPanier(panierOriginal.getIdPanier());
+        constituerRepository.deleteAll(lignes);
+        panierOriginal.getLignes().clear();
+        panierOriginal.setPrixtotalPa(BigDecimal.ZERO);
+        panierRepository.save(panierOriginal);
+
+        return panierCommande;
     }
 
     @Transactional
