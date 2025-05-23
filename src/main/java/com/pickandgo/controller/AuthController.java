@@ -1,5 +1,6 @@
 package com.pickandgo.controller;
 
+import com.pickandgo.model.Panier;
 import com.pickandgo.model.Utilisateur;
 import com.pickandgo.service.PanierService;
 import com.pickandgo.service.UtilisateurService;
@@ -39,7 +40,7 @@ public class AuthController {
         Map<String, Object> reponse = new HashMap<>();
         reponse.put("utilisateur", utilisateurConnecte);
 
-        // Cas 1: Fusion de panier anonyme avec sessionId
+        // Cas 1: Fusion de panier anonyme avec sessionId (navigation normale)
         if (sessionId != null && !sessionId.isEmpty()) {
             try {
                 panierService.fusionnerPanierAnonymeVersUtilisateur(sessionId, utilisateurConnecte.getId());
@@ -50,14 +51,19 @@ public class AuthController {
             }
         }
 
-        // Cas 2: Si l'utilisateur vient de la page de commande (avec un panierId)
+        // Cas 2: Connexion pendant le processus de commande (avec un panierId)
         if (panierId != null) {
             try {
-                // Finaliser la commande avec l'ID utilisateur maintenant connecté
-                panierService.finaliserCommandeApresConnexion(panierId, utilisateurConnecte.getId());
-                reponse.put("commandeFinalisee", true);
+                // Au lieu de finaliser la commande, on transfère simplement les produits
+                // et on retourne le panier pour que l'utilisateur puisse choisir un magasin et un créneau
+                Panier panierUtilisateur = panierService.finaliserCommandeApresConnexion(panierId, utilisateurConnecte.getId());
+
+                reponse.put("etapeCommandeEnCours", true);
+                reponse.put("panierId", panierUtilisateur.getIdPanier());
+                reponse.put("etapeSuivante", "choixRetrait");
+                reponse.put("message", "Veuillez sélectionner un magasin et un créneau de retrait pour finaliser votre commande");
             } catch (Exception e) {
-                reponse.put("commandeFinalisee", false);
+                reponse.put("etapeCommandeEnCours", false);
                 reponse.put("erreurCommande", e.getMessage());
             }
         }

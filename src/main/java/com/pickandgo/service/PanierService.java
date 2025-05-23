@@ -377,7 +377,7 @@ public class PanierService {
         }
 
         // 5. Créer une commande à partir du panier utilisateur
-        return passerCommande(panierUtilisateur.getIdPanier());
+        return panierUtilisateur;
     }
     // Méthode pour passer une commande avec authentification
     @Transactional
