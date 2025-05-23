@@ -410,4 +410,40 @@ public class PanierService {
 
         return panierOptional.orElseThrow(() -> new RuntimeException("Panier non trouvé pour cet utilisateur"));
     }
+
+
+    //Pour ajouter liste à panier
+    @Transactional
+    public void ajouterProduitsDepuisListe(Integer idPanier, ListeDeCourse liste) {
+        Panier panier = panierRepository.findById(idPanier)
+                .orElseThrow(() -> new RuntimeException("Panier non trouvé"));
+
+        for (Lister lister : liste.getLiaisonsProduits()) {
+            Produit produit = lister.getProduit();
+            int quantite = lister.getQuantite();
+
+            Optional<Constituer> optLigne = constituerRepository.findByPanier_IdPanierAndProduit_Id(idPanier, produit.getId());
+
+            if (optLigne.isPresent()) {
+                Constituer ligne = optLigne.get();
+                ligne.setQuantite(ligne.getQuantite() + quantite);
+                constituerRepository.save(ligne);
+            } else {
+                Constituer ligne = new Constituer();
+                ConstituerPK pk = new ConstituerPK();
+                pk.setPanierId(idPanier);
+                pk.setProduitId(produit.getId());
+                ligne.setId(pk);
+                ligne.setPanier(panier);
+                ligne.setProduit(produit);
+                ligne.setQuantite(quantite);
+                panier.getLignes().add(ligne);
+                constituerRepository.save(ligne);
+            }
+        }
+        // Met à jour le prix total (réutiliser ta méthode)
+        mettreAJourPrixTotalPanier(panier);
+
+        panierRepository.save(panier);
+    }
 }

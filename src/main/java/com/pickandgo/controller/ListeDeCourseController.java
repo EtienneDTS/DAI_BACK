@@ -2,8 +2,10 @@ package com.pickandgo.controller;
 
 import com.pickandgo.model.ListeDeCourse;
 import com.pickandgo.model.Lister;
+import com.pickandgo.model.Panier;
 import com.pickandgo.model.PostIt;
 import com.pickandgo.service.ListeDeCourseService;
+import com.pickandgo.service.PanierService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,10 +19,12 @@ import java.util.*;
 public class ListeDeCourseController {
 
     private final ListeDeCourseService listeDeCourseService;
+    private final PanierService panierService;
 
     @Autowired
-    public ListeDeCourseController(ListeDeCourseService listeDeCourseService) {
+    public ListeDeCourseController(ListeDeCourseService listeDeCourseService, PanierService panierService) {
         this.listeDeCourseService = listeDeCourseService;
+        this.panierService = panierService;
     }
 
     @GetMapping("/utilisateur/{id}")
@@ -180,6 +184,25 @@ public class ListeDeCourseController {
         }
     }
 
+
+
+    // CONVERSION D'UNE LISTE EN PANIER
+    @PostMapping("/{idListe}/deverser-dans-panier/{idPanier}")
+    public ResponseEntity<String> deverserProduitsDansPanier(
+            @PathVariable Integer idListe,
+            @PathVariable Integer idPanier) {
+
+        Optional<ListeDeCourse> optionalListe = listeDeCourseService.getListeParId(idListe);
+        if (optionalListe.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Liste de course non trouvée");
+        }
+        ListeDeCourse liste = optionalListe.get();
+
+        panierService.ajouterProduitsDepuisListe(idPanier, liste);
+
+        return ResponseEntity.ok("Produits déversés dans le panier");
+    }
 
 }
 
