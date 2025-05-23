@@ -1,12 +1,10 @@
 package com.pickandgo.service;
 
 import com.pickandgo.dto.ModifierQuantiteProduitDTO;
+import com.pickandgo.dto.RetraitSelectionDTO;
 import com.pickandgo.dto.SupprimerProduitEntierDTO;
 import com.pickandgo.model.*;
-import com.pickandgo.repository.ConstituerRepository;
-import com.pickandgo.repository.PanierRepository;
-import com.pickandgo.repository.ProduitRepository;
-import com.pickandgo.repository.UtilisateurRepository;
+import com.pickandgo.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +31,62 @@ public class PanierService {
 
     @Autowired
     private UtilisateurAnonymeService utilisateurAnonymeService;
+
+    @Autowired
+    private DisponibleRepository disponibleRepository;
+
+    @Autowired
+    private MagasinRepository magasinRepository;
+
+    @Autowired
+    private JourRepository jourRepository;
+
+    @Autowired
+    private CreneauRepository creneauRepository;
+
+    @Autowired
+    private CommanderRepository commanderRepository;
+
+    @Transactional
+    public Panier passerCommandeAvecRetrait(Integer panierId, RetraitSelectionDTO selection) {
+        Panier panier = panierRepository.findById(panierId)
+                .orElseThrow(() -> new RuntimeException("Panier non trouvé"));
+
+        // Vérifier la disponibilité du créneau
+        Disponible disponible = disponibleRepository.findByIdMIdAndIdDateIdAndIdCrId(
+                selection.getMagasinId(), selection.getJourId(), selection.getCreneauId());
+        if (disponible == null || !Boolean.TRUE.equals(disponible.getDispo())) {
+            throw new RuntimeException("Créneau non disponible");
+        }
+        disponible.setDispo(false);
+        disponibleRepository.save(disponible);
+
+        // Créer l'entrée Commander
+        Commander commander = new Commander();
+        CommanderId commanderId = new CommanderId();
+        commanderId.setIdPa(panierId);
+        commanderId.setIdM(selection.getMagasinId());
+        commander.setId(commanderId);
+
+
+        Magasin magasin = magasinRepository.findById(selection.getMagasinId())
+                .orElseThrow(() -> new RuntimeException("Magasin non trouvé"));
+        Jour jour = jourRepository.findById(selection.getJourId())
+                .orElseThrow(() -> new RuntimeException("Jour non trouvé"));
+        Creneau creneau = creneauRepository.findById(selection.getCreneauId())
+                .orElseThrow(() -> new RuntimeException("Créneau non trouvé"));
+
+        commander.setIdPa(panier);
+        commander.setIdM(magasin);
+        commander.setDateC(jour.getDateJour());
+        commander.setCreneauChoisi(creneau.getNom());
+
+        commanderRepository.save(commander);
+
+        // Passer le panier au statut COMMANDE
+        panier.setStatus(Panier.StatutPanier.COMMANDE);
+        return panierRepository.save(panier);
+    }
 
     @Transactional
     public Panier modifierQuantiteProduit(ModifierQuantiteProduitDTO dto) {
@@ -241,6 +295,31 @@ public class PanierService {
 
         // Supprimer l'utilisateur anonyme
         utilisateurRepository.delete(utilisateurAnonyme);
+    }
+
+    @Transactional
+    public Panier choisirRetraitEtReserverCreneau(Integer panierId, RetraitSelectionDTO selection) {
+        Panier panier = panierRepository.findById(panierId)
+                .orElseThrow(() -> new RuntimeException("Panier non trouvé"));
+
+        // Vérifier la disponibilité du créneau
+        Disponible disponible = disponibleRepository.findByIdMIdAndIdDateIdAndIdCrId(
+                selection.getMagasinId(), selection.getJourId(), selection.getCreneauId());
+
+        if (disponible == null || !Boolean.TRUE.equals(disponible.getDispo())) {
+            throw new RuntimeException("Créneau non disponible");
+        }
+
+        // Réserver le créneau
+        disponible.setDispo(false);
+        disponibleRepository.save(disponible);
+
+        // (Optionnel) Associer le créneau au panier (il faut ajouter les champs dans Panier)
+        // panier.setMagasin(...);
+        // panier.setJour(...);
+        // panier.setCreneau(...);
+
+        return panierRepository.save(panier);
     }
 
     // Méthode pour finaliser une commande après connexion

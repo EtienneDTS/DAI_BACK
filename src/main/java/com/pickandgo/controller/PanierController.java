@@ -2,6 +2,7 @@ package com.pickandgo.controller;
 
 import com.pickandgo.dto.ModifierQuantiteProduitDTO;
 import com.pickandgo.dto.SupprimerProduitEntierDTO;
+import com.pickandgo.dto.RetraitSelectionDTO;
 import com.pickandgo.model.Panier;
 import com.pickandgo.service.PanierService;
 import org.springframework.security.core.Authentication;
@@ -19,7 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/paniers")
+@RequestMapping("/api/panier")
 @CrossOrigin(origins = "http://localhost:5173")
 @Tag(name = "Panier", description = "API pour la gestion du panier utilisateur")
 public class PanierController {
@@ -102,6 +103,16 @@ public class PanierController {
             throw e;
         }
     }
+
+    @PostMapping("/{id}/choisir-retrait")
+    @Operation(summary = "Choisir un magasin, une date et un créneau pour le retrait")
+    public ResponseEntity<Panier> choisirRetrait(
+            @PathVariable Integer id,
+            @RequestBody RetraitSelectionDTO selection) {
+        Panier panier = panierService.choisirRetraitEtReserverCreneau(id, selection);
+        return ResponseEntity.ok(panier);
+    }
+
     @PutMapping("/{id}/demarrer-preparation")
     @Operation(summary = "Démarrer la préparation d'une commande")
     @ApiResponses(value = {
