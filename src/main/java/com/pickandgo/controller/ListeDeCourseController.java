@@ -141,7 +141,7 @@ public class ListeDeCourseController {
         listeMap.put("produits", produitsAvecQuantite);
 
         // Post-its
-        List<PostIt> postIts = liste.getPostIts(); // ← nécessite que tu aies bien mappé les post-its dans ListeDeCourse
+        List<PostIt> postIts = liste.getPostIts();
         listeMap.put("postIts", postIts);
 
         return ResponseEntity.ok(listeMap);
@@ -203,6 +203,12 @@ public class ListeDeCourseController {
 
         return ResponseEntity.ok("Produits déversés dans le panier");
     }
+
+
+    //METHODE POUR SUGGERER PRODUITS POST-ITS/HABITUDE
+
+    //if post-it a des mots -clés, on va chercher les produits qui contiennent ces mots-clés
+
 
 }
 

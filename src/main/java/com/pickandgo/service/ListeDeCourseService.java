@@ -53,18 +53,27 @@ public class ListeDeCourseService {
         Produit produit = produitRepository.findById(idProduit)
                 .orElseThrow(() -> new RuntimeException("Produit non trouvé"));
 
-        ListerId listerId = new ListerId();
-        listerId.setIdL(idListe);
-        listerId.setIdP(idProduit);
+        Optional<Lister> liaisonExistanteOpt = listerRepository.findByListeIdAndProduitId(idListe, idProduit);
 
-        Lister lister = new Lister();
-        lister.setId(listerId);
-        lister.setListe(liste);
-        lister.setProduit(produit);
-        lister.setQuantite(quantite);
-
-        listerRepository.save(lister);
+        if (liaisonExistanteOpt.isPresent()) {
+            // Le produit est déjà dans la liste => on augmente la quantité
+            Lister liaisonExistante = liaisonExistanteOpt.get();
+            liaisonExistante.setQuantite(liaisonExistante.getQuantite() + quantite);
+            listerRepository.save(liaisonExistante);
+        } else {
+            // Nouveau lien entre produit et liste
+            Lister nouvelleLiaison = new Lister();
+            ListerId id = new ListerId();
+            id.setIdL(idListe);
+            id.setIdP(idProduit);
+            nouvelleLiaison.setId(id);
+            nouvelleLiaison.setListe(liste);
+            nouvelleLiaison.setProduit(produit);
+            nouvelleLiaison.setQuantite(quantite);
+            listerRepository.save(nouvelleLiaison);
+        }
     }
+
 
 
     @Transactional
