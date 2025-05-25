@@ -1,6 +1,5 @@
 package com.pickandgo.service;
 
-import com.pickandgo.dto.AjouterProduitPanierDTO;
 import com.pickandgo.dto.ModifierQuantiteProduitDTO;
 import com.pickandgo.dto.RetraitSelectionDTO;
 import com.pickandgo.dto.SupprimerProduitEntierDTO;
@@ -86,51 +85,6 @@ public class PanierService {
 
         // Passer le panier au statut COMMANDE
         panier.setStatus(Panier.StatutPanier.COMMANDE);
-        return panierRepository.save(panier);
-    }
-
-    @Transactional
-    public Panier ajouterProduitPanier(AjouterProduitPanierDTO dto) {
-        Panier panier = panierRepository.findById(dto.getIdPanier())
-                .orElseThrow(() -> new RuntimeException("Panier non trouvé"));
-
-        Produit produit = produitRepository.findById(dto.getIdProduit())
-                .orElseThrow(() -> new RuntimeException("Produit non trouvé"));
-
-        Optional<Constituer> constituerOpt = constituerRepository.findByPanier_IdPanierAndProduit_Id(
-                dto.getIdPanier(), dto.getIdProduit());
-
-        Constituer ligne;
-
-        if (constituerOpt.isPresent()) {
-            // Produit déjà dans le panier, mise à jour de la quantité
-            ligne = constituerOpt.get();
-            if (dto.getQuantite() <= 0) {
-                // Si quantité <= 0, supprimer le produit du panier
-                panier.getLignes().remove(ligne);
-                constituerRepository.delete(ligne);
-            } else {
-                // Mise à jour de la quantité
-                ligne.setQuantite(dto.getNouvelleQuantite());
-                constituerRepository.save(ligne);
-            }
-        } else if (dto.getNouvelleQuantite() > 0) {
-            // Nouveau produit à ajouter au panier
-            ligne = new Constituer();
-            ConstituerPK pk = new ConstituerPK();
-            pk.setPanierId(panier.getIdPanier());
-            pk.setProduitId(produit.getId());
-            ligne.setId(pk);
-            ligne.setPanier(panier);
-            ligne.setProduit(produit);
-            ligne.setQuantite(dto.getNouvelleQuantite());
-            panier.getLignes().add(ligne);
-            constituerRepository.save(ligne);
-        }
-
-        // Recalcul du prix total du panier
-        mettreAJourPrixTotalPanier(panier);
-
         return panierRepository.save(panier);
     }
 
