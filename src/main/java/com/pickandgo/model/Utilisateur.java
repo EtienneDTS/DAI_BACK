@@ -43,4 +43,9 @@ public class Utilisateur {
     @JsonProperty("adresse")
     private String adresseU;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "idM")
+    @JsonProperty("magasin")
+    private Magasin magasin;
+
 }

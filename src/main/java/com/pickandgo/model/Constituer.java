@@ -1,7 +1,6 @@
 package com.pickandgo.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,6 +28,20 @@ public class Constituer {
 
     @Column(name = "quantiteP")
     private Integer quantite = 0;
+
+    @Transient
+    private Integer quantiteDisponible;
+
+
+    @Transient
+    private Boolean dispo;
+
+    public Boolean getDispo() {
+        if (quantite == null || quantiteDisponible == null) {
+            return false;
+        }
+        return quantiteDisponible >= quantite;
+    }
 
     // Constructeurs, equals et hashCode
     public Constituer() {

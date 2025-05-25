@@ -183,4 +183,20 @@ public class PanierController {
     }
 
 
+    // MODIFS SO POUR DISPO
+    @GetMapping("/utilisateur/{userId}/magasin/{magasinId}")
+    @Operation(summary = "Récupérer le panier d'un utilisateur avec les disponibilités en stock par magasin")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Panier avec disponibilités trouvé"),
+            @ApiResponse(responseCode = "404", description = "Utilisateur ou panier non trouvé")
+    })
+    public ResponseEntity<Panier> getPanierAvecDisponibilite(
+            @PathVariable Integer userId,
+            @PathVariable Integer magasinId) {
+        Panier panier = panierService.getPanierUtilisateurAvecDisponibilite(userId, magasinId);
+        return ResponseEntity.ok(panier);
+    }
+
+
+
 }

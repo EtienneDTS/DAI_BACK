@@ -47,6 +47,9 @@ public class PanierService {
     @Autowired
     private CommanderRepository commanderRepository;
 
+    @Autowired
+    private StockerRepository stockerRepository;
+
     @Transactional
     public Panier passerCommandeAvecRetrait(Integer panierId, RetraitSelectionDTO selection) {
         Panier panier = panierRepository.findById(panierId)
@@ -544,4 +547,32 @@ public class PanierService {
 
         panierRepository.save(panier);
     }
+
+
+    //MODIFS SO POUR DISPO
+    @Transactional
+    public Panier getPanierUtilisateurAvecDisponibilite(Integer userId, Integer magasinId) {
+        // Rechercher un panier existant au statut PANIER pour cet utilisateur
+        Optional<Panier> panierOptional = panierRepository.findByUtilisateurIdAndStatus(
+                userId, Panier.StatutPanier.PANIER);
+
+        Panier panier = panierOptional.orElseThrow(() ->
+                new RuntimeException("Panier non trouvé pour cet utilisateur")
+        );
+
+        for (Constituer ligne : panier.getLignes()) {
+            Integer produitId = ligne.getProduit().getId();
+
+            // Récupérer la quantité disponible de ce produit dans le magasin donné
+            Integer quantiteDispo = stockerRepository.findQuantiteByProduitIdAndMagasinId(produitId, magasinId);
+
+            ligne.setQuantiteDisponible(quantiteDispo != null ? quantiteDispo : 0);
+        }
+
+
+        return panier;
+    }
+
+
+
 }
