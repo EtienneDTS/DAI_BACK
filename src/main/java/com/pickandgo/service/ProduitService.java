@@ -4,11 +4,18 @@ import com.pickandgo.dto.NouveauProduitDTO;
 import com.pickandgo.model.Categorie;
 import com.pickandgo.model.MotCle;
 import com.pickandgo.model.Produit;
+import com.pickandgo.model.Promotion;
+import com.pickandgo.model.Rayon;
 import com.pickandgo.repository.CategorieRepository;
 import com.pickandgo.repository.ProduitRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.multipart.MultipartFile;
+import com.pickandgo.repository.RayonRepository;
+import com.pickandgo.repository.PromotionRepository;
+
 
 import java.util.Collections;
 import java.util.List;
@@ -20,11 +27,20 @@ public class ProduitService {
 
     private final ProduitRepository produitRepository;
     private final CategorieRepository categorieRepository;
+    private final RayonRepository rayonRepository;
+    private final PromotionRepository promotionRepository;
 
     @Autowired
-    public ProduitService(ProduitRepository produitRepository, CategorieRepository categorieRepository) {
+    public ProduitService(
+            ProduitRepository produitRepository,
+            CategorieRepository categorieRepository,
+            RayonRepository rayonRepository,
+            PromotionRepository promotionRepository
+    ) {
         this.produitRepository = produitRepository;
         this.categorieRepository = categorieRepository;
+        this.rayonRepository = rayonRepository;
+        this.promotionRepository = promotionRepository;
     }
 
     @Transactional
@@ -69,9 +85,22 @@ public class ProduitService {
 
     @Transactional
     public Produit creerProduit(NouveauProduitDTO dto) {
-        // Vérifier que la catégorie existe
-        Categorie categorie = categorieRepository.findById(dto.getCategorieId())
-                .orElseThrow(() -> new RuntimeException("Catégorie non trouvée"));
+
+        // 🔎 Récupérer le rayon
+        Rayon rayon = rayonRepository.findById(dto.getIdR())
+                .orElseThrow(() -> new RuntimeException("Rayon non trouvé avec l'ID: " + dto.getIdR()));
+
+        // 🔎 Récupérer la catégorie
+        Categorie categorie = categorieRepository.findById(dto.getIdCate())
+                .orElseThrow(() -> new RuntimeException("Catégorie non trouvée avec l'ID: " + dto.getIdCate()));
+
+
+        // 🔎 Récupérer la promotion (facultative)
+        Promotion promotion = null;
+        if (dto.getIdPr() != null) {
+            promotion = promotionRepository.findById(dto.getIdPr())
+                    .orElseThrow(() -> new RuntimeException("Promotion non trouvée avec l'ID: " + dto.getIdPr()));
+        }
 
         // Créer le nouveau produit
         Produit nouveauProduit = new Produit();
@@ -84,7 +113,9 @@ public class ProduitService {
         nouveauProduit.setBioP(dto.getBioP());
         nouveauProduit.setMarqueP(dto.getMarqueP());
         nouveauProduit.setUrlImage(dto.getUrlImage());
+        nouveauProduit.setRayon(rayon);
         nouveauProduit.setIdCate(categorie);
+        nouveauProduit.setPromotion(promotion);
 
         // Sauvegarder et retourner le produit
         return produitRepository.save(nouveauProduit);
@@ -98,5 +129,12 @@ public class ProduitService {
     @Transactional
     public Produit getProduitById(Integer id) {
         return produitRepository.findById(id).orElse(null);
+    }
+    
+    @Transactional
+    public Produit creerProduitDepuisFichier(MultipartFile file) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        NouveauProduitDTO dto = mapper.readValue(file.getInputStream(), NouveauProduitDTO.class);
+        return creerProduit(dto);
     }
 }
