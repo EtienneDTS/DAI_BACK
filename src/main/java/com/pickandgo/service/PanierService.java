@@ -608,5 +608,15 @@ public class PanierService {
                 .orElse(null);
     }
 
+    //RECUP PANIER EN COMMANDE
+    public List<Panier> getCommandesParMagasin(Integer magasinId) {
+        List<Panier.StatutPanier> statutsSouhaites = List.of(
+                Panier.StatutPanier.COMMANDE,
+                Panier.StatutPanier.EN_PREPARATION,
+                Panier.StatutPanier.PRET
+        );
+        return panierRepository.findCommandesParMagasin(magasinId, statutsSouhaites);
+    }
+
 
 }

@@ -220,6 +220,21 @@ public class PanierController {
         return ResponseEntity.ok(panier);
     }
 
+    //RECUPERER TOUTES LES COMMANDES D'UN MAGASIN (HORS PANIER)
+    @GetMapping("/magasin/{magasinId}/commandes")
+    @Operation(summary = "Récupérer toutes les commandes d'un magasin")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Commandes trouvées"),
+            @ApiResponse(responseCode = "404", description = "Magasin non trouvé")
+    })
+    public ResponseEntity<?> getCommandesParMagasin(@PathVariable Integer magasinId) {
+        try {
+            return ResponseEntity.ok(panierService.getCommandesParMagasin(magasinId));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur lors de la récupération des commandes : " + e.getMessage());
+        }
+    }
+
 
 
 }
