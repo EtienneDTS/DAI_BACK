@@ -187,22 +187,23 @@ public class ListeDeCourseController {
 
 
     // CONVERSION D'UNE LISTE EN PANIER
-    @PostMapping("/{idListe}/deverser-dans-panier/{idPanier}")
-    public ResponseEntity<String> deverserProduitsDansPanier(
+    @PostMapping("/{idListe}/deverser-dans-panier/{idUtilisateur}")
+    public ResponseEntity<Panier> deverserProduitsDansPanier(
             @PathVariable Integer idListe,
-            @PathVariable Integer idPanier) {
+            @PathVariable Integer idUtilisateur) {
 
         Optional<ListeDeCourse> optionalListe = listeDeCourseService.getListeParId(idListe);
         if (optionalListe.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Liste de course non trouvée");
+                    .body(null);
         }
         ListeDeCourse liste = optionalListe.get();
 
-        panierService.ajouterProduitsDepuisListe(idPanier, liste);
+        Panier panier = panierService.ajouterProduitsDepuisListeDansPanier(idUtilisateur, liste.getLiaisonsProduits());
 
-        return ResponseEntity.ok("Produits déversés dans le panier");
+        return ResponseEntity.ok(panier);
     }
+
 
 
     //METHODE POUR SUGGERER PRODUITS POST-ITS/HABITUDE
