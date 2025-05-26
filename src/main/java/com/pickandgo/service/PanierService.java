@@ -51,6 +51,52 @@ public class PanierService {
     private StockerRepository stockerRepository;
 
     @Transactional
+    public Panier ajouterProduitAuPanierUtilisateur(Integer idUtilisateur, Integer idProduit, Integer quantite) {
+        // Trouver ou créer le panier de l'utilisateur
+        Optional<Panier> panierOpt = panierRepository.findByUtilisateurIdAndStatus(
+                idUtilisateur, Panier.StatutPanier.PANIER);
+
+        Panier panier;
+        if (!panierOpt.isPresent()) {
+            // Créer un nouveau panier pour l'utilisateur
+            Utilisateur utilisateur = utilisateurRepository.findById(idUtilisateur)
+                    .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+            panier = new Panier();
+            panier.setUtilisateur(utilisateur);
+            panier.setStatus(Panier.StatutPanier.PANIER);
+            panier.setPrixtotalPa(BigDecimal.ZERO);
+            panier = panierRepository.save(panier);
+        } else {
+            panier = panierOpt.get();
+        }
+
+        // Vérifier que le produit existe
+        Produit produit = produitRepository.findById(idProduit)
+                .orElseThrow(() -> new RuntimeException("Produit non trouvé"));
+
+        // Créer le DTO pour utiliser la méthode existante
+        ModifierQuantiteProduitDTO dto = new ModifierQuantiteProduitDTO();
+        dto.setIdPanier(panier.getIdPanier());
+        dto.setIdProduit(idProduit);
+
+        // Vérifier si le produit est déjà dans le panier
+        Optional<Constituer> ligneOpt = constituerRepository.findByPanier_IdPanierAndProduit_Id(
+                panier.getIdPanier(), idProduit);
+
+        if (ligneOpt.isPresent()) {
+            // Ajouter à la quantité existante
+            dto.setNouvelleQuantite(ligneOpt.get().getQuantite() + quantite);
+        } else {
+            // Nouvelle quantité
+            dto.setNouvelleQuantite(quantite);
+        }
+
+        // Utiliser la méthode existante pour ajouter le produit
+        return modifierQuantiteProduit(dto);
+    }
+
+    @Transactional
     public Panier passerCommandeAvecRetrait(Integer panierId, RetraitSelectionDTO selection) {
         Panier panier = panierRepository.findById(panierId)
                 .orElseThrow(() -> new RuntimeException("Panier non trouvé"));
