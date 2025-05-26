@@ -1,7 +1,9 @@
 package com.pickandgo.service;
 
+import com.pickandgo.model.Magasin;
 import com.pickandgo.model.Utilisateur;
 import com.pickandgo.repository.UtilisateurRepository;
+import com.pickandgo.repository.MagasinRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,12 +14,18 @@ import java.util.stream.Collectors;
 
 @Service
 public class UtilisateurService {
+
     @Autowired
     private UtilisateurRepository utilisateurRepository;
+
+
+    @Autowired  // <-- Ajout de l'injection
+    private MagasinRepository magasinRepository;
 
     public List<Utilisateur> getAllUtilisateurs() {
         return utilisateurRepository.findAllWithMagasin();
     }
+
 
     @Transactional
     public Utilisateur verifierConnexion(String email, String password) {
@@ -46,7 +54,15 @@ public class UtilisateurService {
         return "60+";
     }
 
+    @Transactional
+    public Utilisateur changerMagasinUtilisateur(Integer idUtilisateur, Integer idMagasin) {
+        Utilisateur utilisateur = utilisateurRepository.findById(idUtilisateur)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
+        Magasin magasin = magasinRepository.findById(idMagasin)
+                .orElseThrow(() -> new RuntimeException("Magasin non trouvé"));
 
-
+        utilisateur.setMagasin(magasin);
+        return utilisateurRepository.save(utilisateur);
+    }
 }
