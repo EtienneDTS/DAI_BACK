@@ -50,6 +50,7 @@ public class PanierService {
     @Autowired
     private StockerRepository stockerRepository;
 
+
     @Transactional
     public Panier ajouterProduitAuPanierUtilisateur(Integer idUtilisateur, Integer idProduit, Integer quantite) {
         // Trouver ou créer le panier de l'utilisateur
@@ -565,15 +566,29 @@ public class PanierService {
         Panier panier = panierRepository.findByUtilisateurIdAndStatus(idUtilisateur, Panier.StatutPanier.PANIER)
                 .orElseThrow(() -> new RuntimeException("Panier non trouvé"));
 
+        // Ajout des produits un par un dans le panier
         for (Lister liaison : liaisonsProduits) {
             Produit produit = liaison.getProduit();
             Integer quantite = liaison.getQuantite();
             ajouterProduitAuPanierUtilisateur(idUtilisateur, produit.getId(), quantite);
         }
-        // Recharger le panier pour s'assurer que la collection 'lignes' est à jour
-        return panierRepository.findById(panier.getIdPanier())
+
+        // Recharger le panier pour que la liste 'lignes' soit à jour
+        panier = panierRepository.findById(panier.getIdPanier())
                 .orElseThrow(() -> new RuntimeException("Panier non trouvé après ajout"));
+
+        // Mettre à jour les quantités disponibles et le statut dispo pour chaque ligne
+        Integer magasinId = panier.getUtilisateur().getMagasin().getId();
+        panier.getLignes().forEach(ligne -> {
+            Integer stockDispo = stockerRepository.findQuantiteByProduitIdAndMagasinId(
+                    ligne.getProduit().getId(), magasinId).orElse(0);
+            ligne.setQuantiteDisponible(stockDispo);
+            ligne.setDispo(stockDispo >= ligne.getQuantite());
+        });
+
+        return panier;
     }
+
 
 
 
@@ -581,23 +596,16 @@ public class PanierService {
     //MODIFS SO POUR DISPO
     @Transactional
     public Panier getPanierUtilisateurAvecDisponibilite(Integer userId, Integer magasinId) {
-        // Rechercher un panier existant au statut PANIER pour cet utilisateur
-        Optional<Panier> panierOptional = panierRepository.findByUtilisateurIdAndStatus(
-                userId, Panier.StatutPanier.PANIER);
-
-        Panier panier = panierOptional.orElseThrow(() ->
-                new RuntimeException("Panier non trouvé pour cet utilisateur")
-        );
+        Panier panier = panierRepository.findByUtilisateurIdAndStatus(userId, Panier.StatutPanier.PANIER)
+                .orElseThrow(() -> new RuntimeException("Panier non trouvé"));
 
         for (Constituer ligne : panier.getLignes()) {
-            Integer produitId = ligne.getProduit().getId();
-
-            // Récupérer la quantité disponible de ce produit dans le magasin donné
-            Integer quantiteDispo = stockerRepository.findQuantiteByProduitIdAndMagasinId(produitId, magasinId);
-
-            ligne.setQuantiteDisponible(quantiteDispo != null ? quantiteDispo : 0);
+            Produit produit = ligne.getProduit();
+            Integer quantiteEnStock = stockerRepository.findQuantiteByProduitIdAndMagasinId(produit.getId(), magasinId)
+                    .orElse(0); // Assure-toi de retourner 0 si non trouvé
+            ligne.setQuantiteDisponible(quantiteEnStock);
+            ligne.setDispo(quantiteEnStock >= ligne.getQuantite());
         }
-
 
         return panier;
     }
