@@ -43,4 +43,7 @@ public class Panier {
         PRET,
         RECUPERE
     }
+
+    @OneToMany(mappedBy = "idPa", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Commander> commandes = new ArrayList<>();
 }

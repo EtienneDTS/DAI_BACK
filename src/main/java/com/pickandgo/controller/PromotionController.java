@@ -13,6 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/promotions")
+@CrossOrigin(origins = "http://localhost:5173")
 public class PromotionController {
 
     private final PromotionService promotionService;
