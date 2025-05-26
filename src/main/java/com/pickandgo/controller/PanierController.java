@@ -121,11 +121,19 @@ public class PanierController {
 
     @PostMapping("/{id}/choisir-retrait")
     @Operation(summary = "Choisir un magasin, une date et un créneau pour le retrait")
-    public ResponseEntity<Panier> choisirRetrait(
+    public ResponseEntity<Map<String, Object>> choisirRetrait(
             @PathVariable Integer id,
             @RequestBody RetraitSelectionDTO selection) {
         Panier panier = panierService.choisirRetraitEtReserverCreneau(id, selection);
-        return ResponseEntity.ok(panier);
+
+        // Créer une réponse qui inclut le panier et les informations de retrait
+        Map<String, Object> response = new HashMap<>();
+        response.put("panier", panier);
+        response.put("magasinId", selection.getMagasinId());
+        response.put("jourId", selection.getJourId());
+        response.put("creneauId", selection.getCreneauId());
+
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}/demarrer-preparation")
