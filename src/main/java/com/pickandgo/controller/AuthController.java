@@ -40,6 +40,11 @@ public class AuthController {
         Map<String, Object> reponse = new HashMap<>();
         reponse.put("utilisateur", utilisateurConnecte);
 
+        Panier panierActif = panierService.trouverPanierActifParUtilisateur(utilisateurConnecte.getId());
+        if (panierActif != null) {
+            reponse.put("panierActifId", panierActif.getIdPanier());
+        }
+
         // Cas 1: Fusion de panier anonyme avec sessionId (navigation normale)
         if (sessionId != null && !sessionId.isEmpty()) {
             try {

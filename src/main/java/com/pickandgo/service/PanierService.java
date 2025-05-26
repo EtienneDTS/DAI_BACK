@@ -574,5 +574,10 @@ public class PanierService {
     }
 
 
+    public Panier trouverPanierActifParUtilisateur(Integer idUtilisateur) {
+        return panierRepository.findByUtilisateurIdAndStatus(idUtilisateur, Panier.StatutPanier.PANIER)
+                .orElse(null);
+    }
+
 
 }
