@@ -234,7 +234,7 @@ public class PanierService {
     public BigDecimal calculerPrixTotal(Panier panier) {
         BigDecimal total = BigDecimal.ZERO;
         for (Constituer ligne : panier.getLignes()) {
-            BigDecimal prixLigne = ligne.getProduit().getPrixUnitaireP()
+            BigDecimal prixLigne = ligne.getProduit().getPrixUnitaire()
                     .multiply(BigDecimal.valueOf(ligne.getQuantite()));
             total = total.add(prixLigne);
         }

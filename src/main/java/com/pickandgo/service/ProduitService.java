@@ -104,14 +104,14 @@ public class ProduitService {
 
         // Créer le nouveau produit
         Produit nouveauProduit = new Produit();
-        nouveauProduit.setNomP(dto.getNomP());
-        nouveauProduit.setPrixUnitaireP(dto.getPrixUnitaireP());
-        nouveauProduit.setPrixKgP(dto.getPrixKgP());
-        nouveauProduit.setPoidsP(dto.getPoidsP());
-        nouveauProduit.setNutriP(dto.getNutriP());
-        nouveauProduit.setConditionnementP(dto.getConditionnementP());
-        nouveauProduit.setBioP(dto.getBioP());
-        nouveauProduit.setMarqueP(dto.getMarqueP());
+        nouveauProduit.setNom(dto.getNomP());
+        nouveauProduit.setPrixUnitaire(dto.getPrixUnitaireP());
+        nouveauProduit.setPrixKg(dto.getPrixKgP());
+        nouveauProduit.setPoids(dto.getPoidsP());
+        nouveauProduit.setNutri(dto.getNutriP());
+        nouveauProduit.setConditionnement(dto.getConditionnementP());
+        nouveauProduit.setBio(dto.getBioP());
+        nouveauProduit.setMarque(dto.getMarqueP());
         nouveauProduit.setUrlImage(dto.getUrlImage());
         nouveauProduit.setRayon(rayon);
         nouveauProduit.setIdCate(categorie);

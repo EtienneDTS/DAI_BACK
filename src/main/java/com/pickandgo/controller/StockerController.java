@@ -44,6 +44,6 @@ public class StockerController {
         }
 
         stockerRepository.save(stocker);
-        return ResponseEntity.ok(" Stock mis à jour pour le produit : " + produit.getNomP());
+        return ResponseEntity.ok(" Stock mis à jour pour le produit : " + produit.getNom());
     }
 }
