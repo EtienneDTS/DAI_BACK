@@ -561,38 +561,21 @@ public class PanierService {
 
     //Pour ajouter liste à panier
     @Transactional
-    public void ajouterProduitsDepuisListe(Integer idPanier, ListeDeCourse liste) {
-        Panier panier = panierRepository.findById(idPanier)
+    public Panier ajouterProduitsDepuisListeDansPanier(Integer idUtilisateur, List<Lister> liaisonsProduits) {
+        Panier panier = panierRepository.findByUtilisateurIdAndStatus(idUtilisateur, Panier.StatutPanier.PANIER)
                 .orElseThrow(() -> new RuntimeException("Panier non trouvé"));
 
-        for (Lister lister : liste.getLiaisonsProduits()) {
-            Produit produit = lister.getProduit();
-            int quantite = lister.getQuantite();
-
-            Optional<Constituer> optLigne = constituerRepository.findByPanier_IdPanierAndProduit_Id(idPanier, produit.getId());
-
-            if (optLigne.isPresent()) {
-                Constituer ligne = optLigne.get();
-                ligne.setQuantite(ligne.getQuantite() + quantite);
-                constituerRepository.save(ligne);
-            } else {
-                Constituer ligne = new Constituer();
-                ConstituerPK pk = new ConstituerPK();
-                pk.setPanierId(idPanier);
-                pk.setProduitId(produit.getId());
-                ligne.setId(pk);
-                ligne.setPanier(panier);
-                ligne.setProduit(produit);
-                ligne.setQuantite(quantite);
-                panier.getLignes().add(ligne);
-                constituerRepository.save(ligne);
-            }
+        for (Lister liaison : liaisonsProduits) {
+            Produit produit = liaison.getProduit();
+            Integer quantite = liaison.getQuantite();
+            ajouterProduitAuPanierUtilisateur(idUtilisateur, produit.getId(), quantite);
         }
-        // Met à jour le prix total (réutiliser ta méthode)
-        mettreAJourPrixTotalPanier(panier);
-
-        panierRepository.save(panier);
+        // Recharger le panier pour s'assurer que la collection 'lignes' est à jour
+        return panierRepository.findById(panier.getIdPanier())
+                .orElseThrow(() -> new RuntimeException("Panier non trouvé après ajout"));
     }
+
+
 
 
     //MODIFS SO POUR DISPO
