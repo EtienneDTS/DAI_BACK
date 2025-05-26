@@ -43,4 +43,8 @@ public class Utilisateur {
     @JsonProperty("adresse")
     private String adresseU;
 
+    @Column(name = "ageU")
+    private Integer ageU;
+
+
 }
