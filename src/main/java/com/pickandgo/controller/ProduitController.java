@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 
 @RestController
 @RequestMapping("/api/produits")
@@ -51,4 +53,15 @@ public class ProduitController {
         Produit produitCree = produitService.creerProduit(nouveauProduitDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(produitCree);
     }
+
+    @PostMapping("/upload-json")
+    public ResponseEntity<?> uploadJson(@RequestParam("file") MultipartFile file) {
+        try {
+            Produit produit = produitService.creerProduitDepuisFichier(file);
+            return ResponseEntity.status(HttpStatus.CREATED).body(produit);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
 }
