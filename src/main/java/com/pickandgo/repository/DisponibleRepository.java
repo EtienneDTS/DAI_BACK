@@ -14,4 +14,6 @@ public interface DisponibleRepository extends JpaRepository<Disponible, Disponib
     List<Disponible> findAvailableCreneauxByMagasinAndJour(Integer magasinId, Integer jourId);
 
     Disponible findByIdMIdAndIdDateIdAndIdCrId(Integer magasinId, Integer jourId, Integer creneauId);
+
+    List<Disponible> findByIdMIdAndDispo(Integer magasinId, boolean b);
 }
