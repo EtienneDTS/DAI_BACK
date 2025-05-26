@@ -22,7 +22,7 @@ public class Stocker {
     @JoinColumn(name = "idP") // nom exact dans ta table
     private Produit produit;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("magasinId")
     @JoinColumn(name = "idM") // nom exact dans ta table
     private Magasin magasin;
