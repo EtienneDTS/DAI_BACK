@@ -18,8 +18,14 @@ public class UtilisateurService {
     @Autowired
     private UtilisateurRepository utilisateurRepository;
 
+
     @Autowired  // <-- Ajout de l'injection
     private MagasinRepository magasinRepository;
+
+    public List<Utilisateur> getAllUtilisateurs() {
+        return utilisateurRepository.findAllWithMagasin();
+    }
+
 
     @Transactional
     public Utilisateur verifierConnexion(String email, String password) {
