@@ -9,8 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/categories")
-@CrossOrigin(origins = "*") // 👈 autoriser les appels du front
-public class CategorieController {
+@CrossOrigin(origins = "http://localhost:5173")public class CategorieController {
 
     @Autowired
     private CategorieService categorieService;
