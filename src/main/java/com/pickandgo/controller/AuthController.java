@@ -7,6 +7,7 @@ import com.pickandgo.service.UtilisateurService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,15 +38,21 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Identifiants incorrects");
         }
 
-        Map<String, Object> reponse = new HashMap<>();
-        reponse.put("utilisateur", utilisateurConnecte);
-
+        // Trouve le panier actif
         Panier panierActif = panierService.trouverPanierActifParUtilisateur(utilisateurConnecte.getId());
-        if (panierActif != null) {
-            reponse.put("panierActifId", panierActif.getIdPanier());
-        }
 
-        // Cas 1: Fusion de panier anonyme avec sessionId (navigation normale)
+        // Convertit Utilisateur en Map
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String, Object> utilisateurMap = mapper.convertValue(utilisateurConnecte, Map.class);
+
+        // Injecte le champ panierActifId
+        utilisateurMap.put("panierActifId", panierActif != null ? panierActif.getIdPanier() : null);
+
+        // Réponse JSON complète
+        Map<String, Object> reponse = new HashMap<>();
+        reponse.put("utilisateur", utilisateurMap);
+
+        // Gère les cas sessionId ou panierId comme avant...
         if (sessionId != null && !sessionId.isEmpty()) {
             try {
                 panierService.fusionnerPanierAnonymeVersUtilisateur(sessionId, utilisateurConnecte.getId());
@@ -56,13 +63,9 @@ public class AuthController {
             }
         }
 
-        // Cas 2: Connexion pendant le processus de commande (avec un panierId)
         if (panierId != null) {
             try {
-                // Au lieu de finaliser la commande, on transfère simplement les produits
-                // et on retourne le panier pour que l'utilisateur puisse choisir un magasin et un créneau
                 Panier panierUtilisateur = panierService.finaliserCommandeApresConnexion(panierId, utilisateurConnecte.getId());
-
                 reponse.put("etapeCommandeEnCours", true);
                 reponse.put("panierId", panierUtilisateur.getIdPanier());
                 reponse.put("etapeSuivante", "choixRetrait");
@@ -75,4 +78,5 @@ public class AuthController {
 
         return ResponseEntity.ok(reponse);
     }
+
 }
