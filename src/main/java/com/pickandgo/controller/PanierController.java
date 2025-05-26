@@ -1,5 +1,6 @@
 package com.pickandgo.controller;
 
+import com.pickandgo.dto.AjouterProduitDTO;
 import com.pickandgo.dto.ModifierQuantiteProduitDTO;
 import com.pickandgo.dto.SupprimerProduitEntierDTO;
 import com.pickandgo.dto.RetraitSelectionDTO;
@@ -40,6 +41,20 @@ public class PanierController {
     })
     public ResponseEntity<Panier> getPanierByUtilisateur(@PathVariable Integer id) {
         Panier panier = panierService.getPanierUtilisateur(id);
+        return ResponseEntity.ok(panier);
+    }
+
+    @PostMapping("/ajouter-produit")
+    @Operation(summary = "Ajouter un produit au panier d'un utilisateur")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Produit ajouté avec succès"),
+            @ApiResponse(responseCode = "404", description = "Utilisateur ou produit non trouvé")
+    })
+    public ResponseEntity<Panier> ajouterProduitAuPanier(@RequestBody AjouterProduitDTO dto) {
+        Panier panier = panierService.ajouterProduitAuPanierUtilisateur(
+                dto.getIdUtilisateur(),
+                dto.getIdProduit(),
+                dto.getQuantite());
         return ResponseEntity.ok(panier);
     }
 
@@ -181,6 +196,22 @@ public class PanierController {
         panierService.fusionnerPanierAnonymeVersUtilisateur(sessionId, panierId);
         return ResponseEntity.ok().build();
     }
+
+
+    // MODIFS SO POUR DISPO
+    @GetMapping("/utilisateur/{userId}/magasin/{magasinId}")
+    @Operation(summary = "Récupérer le panier d'un utilisateur avec les disponibilités en stock par magasin")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Panier avec disponibilités trouvé"),
+            @ApiResponse(responseCode = "404", description = "Utilisateur ou panier non trouvé")
+    })
+    public ResponseEntity<Panier> getPanierAvecDisponibilite(
+            @PathVariable Integer userId,
+            @PathVariable Integer magasinId) {
+        Panier panier = panierService.getPanierUtilisateurAvecDisponibilite(userId, magasinId);
+        return ResponseEntity.ok(panier);
+    }
+
 
 
 }

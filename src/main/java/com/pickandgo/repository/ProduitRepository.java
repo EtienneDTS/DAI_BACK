@@ -20,4 +20,6 @@ public interface ProduitRepository extends JpaRepository<Produit, Integer> {
     @EntityGraph(attributePaths = {"motsCles", "rayon", "idCate"})
     Optional<Produit> findById(Integer id);
 
+    List<Produit> findByMotsClesIdInAndIdNot(List<Integer> motCleIds, Integer produitId);
+
 }
