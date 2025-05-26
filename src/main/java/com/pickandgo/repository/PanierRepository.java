@@ -14,11 +14,8 @@ public interface PanierRepository extends JpaRepository<Panier, Integer> {
     Optional<Panier> findByUtilisateurIdAndStatus(Integer utilisateurId, Panier.StatutPanier status);
 
     @Query("SELECT DISTINCT p FROM Panier p " +
-            "JOIN p.lignes l " +
-            "JOIN l.produit prod " +
-            "JOIN prod.stockages s " +
-            "WHERE s.magasin.id = :magasinId " +
-            "AND p.status IN :statuts")
+            "JOIN FETCH p.commandes c " +
+            "WHERE c.idM.id = :magasinId AND p.status IN :statuts")
     List<Panier> findCommandesParMagasin(@Param("magasinId") Integer magasinId,
                                          @Param("statuts") List<Panier.StatutPanier> statuts);
 }
