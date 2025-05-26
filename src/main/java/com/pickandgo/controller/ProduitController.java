@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -24,7 +25,14 @@ public class ProduitController {
     public ResponseEntity<List<ProduitDTO>> getAllProduits() {
         try {
             List<Produit> produits = produitService.getAllProduits();
-            List<ProduitDTO> produitDTOs = DTOMapper.convertToProduitDTOList(produits);
+            List<ProduitDTO> produitDTOs = new ArrayList<>();
+
+            for (Produit produit : produits) {
+                List<Produit> similaires = produitService.recommanderProduitsSimilaires(produit.getId());
+                ProduitDTO dto = DTOMapper.convertToDTO(produit, similaires);
+                produitDTOs.add(dto);
+            }
+
             return ResponseEntity.ok(produitDTOs);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -36,7 +44,8 @@ public class ProduitController {
         try {
             Produit produit = produitService.getProduitById(id);
             if (produit != null) {
-                ProduitDTO produitDTO = DTOMapper.convertToDTO(produit);
+                List<Produit> similaires = produitService.recommanderProduitsSimilaires(id);
+                ProduitDTO produitDTO = DTOMapper.convertToDTO(produit, similaires);
                 return ResponseEntity.ok(produitDTO);
             }
             return ResponseEntity.notFound().build();

@@ -2,6 +2,8 @@ package com.pickandgo.mapper;
 
 import com.pickandgo.dto.*;
 import com.pickandgo.model.*;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -113,6 +115,55 @@ public class DTOMapper {
             stocker.getId() != null && stocker.getMagasin() != null ? Long.valueOf(stocker.getMagasin().getId()) : null,
             stocker.getQuantite()
         );
+    }
+
+    public static PromotionDTO convertToDTO(Promotion promotion) {
+        if (promotion == null) {
+            return null;
+        }
+
+        return new PromotionDTO(
+                promotion.getId(),
+                promotion.getNomPr(),
+                promotion.getUrlImagePromo(),
+                promotion.getTypePr()
+        );
+    }
+
+    public static List<MagasinStockDTO> convertToMagasinStockDTOList(List<Stocker> stockages) {
+        if (stockages == null || stockages.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        return stockages.stream()
+                .filter(s -> s.getMagasin() != null && s.getQuantite() > 0)
+                .map(s -> new MagasinStockDTO(
+                        s.getMagasin().getId(),
+                        s.getMagasin().getNomM(),
+                        s.getMagasin().getAdresseM(),
+                        s.getQuantite()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    public static ProduitDTO convertToDTO(Produit produit, List<Produit> similaires) {
+        ProduitDTO dto = convertToDTO(produit);
+
+        if (similaires != null) {
+            dto.setProduitsSimilaires(convertToProduitDTOList(similaires));
+        }
+
+        // Ajouter les informations sur la promotion
+        if (produit != null && produit.getPromotion() != null) {
+            dto.setPromotion(convertToDTO(produit.getPromotion()));
+        }
+
+        // Ajouter les informations sur les disponibilités en magasin
+        if (produit != null && produit.getStockages() != null) {
+            dto.setDisponibilites(convertToMagasinStockDTOList(produit.getStockages()));
+        }
+
+        return dto;
     }
     
     public static List<StockerDTO> convertToStockerDTOList(List<Stocker> stockerList) {
