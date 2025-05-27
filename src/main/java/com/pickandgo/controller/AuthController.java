@@ -78,4 +78,30 @@ public class AuthController {
 
         return ResponseEntity.ok(reponse);
     }
+
+    @PostMapping("/api/utilisateur-anonyme/{idMagasin}")
+    public ResponseEntity<?> creerUtilisateurAnonyme(@PathVariable Integer idMagasin) {
+        try {
+            // Création de l'utilisateur anonyme avec le magasin spécifié
+            Utilisateur utilisateurAnonyme = utilisateurService.creerUtilisateurAnonymePourMagasin(idMagasin);
+
+            // Création d'un panier pour cet utilisateur
+            Panier panierActif = panierService.creerPanierPourUtilisateur(utilisateurAnonyme.getId());
+
+            // Convertit Utilisateur en Map pour la réponse JSON
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String, Object> utilisateurMap = mapper.convertValue(utilisateurAnonyme, Map.class);
+
+            // Ajoute l'ID du panier actif dans la réponse
+            utilisateurMap.put("panierActifId", panierActif.getIdPanier());
+
+            // Réponse JSON complète
+            Map<String, Object> reponse = new HashMap<>();
+            reponse.put("utilisateur", utilisateurMap);
+
+            return ResponseEntity.ok(reponse);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erreur lors de la création de l'utilisateur anonyme: " + e.getMessage());
+        }
+    }
 }

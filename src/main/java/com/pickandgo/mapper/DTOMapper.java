@@ -9,27 +9,36 @@ import java.util.stream.Collectors;
 
 public class DTOMapper {
 
-    // Méthodes pour convertir les entités en DTOs
     public static ProduitDTO convertToDTO(Produit produit) {
         if (produit == null) {
             return null;
         }
-        
-        return new ProduitDTO(
-            produit.getId(),  // Conversion de Integer à Long
-            produit.getNom(),
-            produit.getMarque(),
-            produit.getPrixUnitaire(),
-            produit.getPrixKg(),
-            produit.getPoids(),
-            produit.getConditionnement(),
-            produit.getBio(),
-            produit.getNutri(),
-            produit.getUrlImage(),
-            produit.getIdCate() != null ? produit.getIdCate().getId(): null,
-            produit.getRayon() != null ? produit.getRayon().getId() : null,
-            produit.getPromotion() != null ? produit.getPromotion().getId() : null
+
+        ProduitDTO dto = new ProduitDTO(
+                produit.getId(),  // Conversion de Integer à Long
+                produit.getNom(),
+                produit.getMarque(),
+                produit.getPrixUnitaire(),
+                produit.getPrixKg(),
+                produit.getPoids(),
+                produit.getConditionnement(),
+                produit.getBio(),
+                produit.getNutri(),
+                produit.getUrlImage(),
+                produit.getIdCate() != null ? produit.getIdCate().getId(): null,
+                produit.getRayon() != null ? produit.getRayon().getId() : null,
+                produit.getPromotion() != null ? produit.getPromotion().getId() : null
         );
+
+        // Ajout des mots-clés
+        if (produit.getMotsCles() != null) {
+            List<String> motsClesTexte = produit.getMotsCles().stream()
+                    .map(MotCle::getMotMc)  // On suppose que MotCle a un attribut 'libelle'
+                    .collect(Collectors.toList());
+            dto.setMotsCles(motsClesTexte);
+        }
+
+        return dto;
     }
     
     public static MagasinDTO convertToDTO(Magasin magasin) {
