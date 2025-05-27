@@ -133,6 +133,31 @@ public class PanierController {
         }
     }
 
+    @GetMapping("/disponibilites/{magasinId}")
+    @Operation(summary = "Récupérer les créneaux disponibles par date pour un magasin")
+    public ResponseEntity<Map<String, List<Map<String, Object>>>> getDisponibilites(@PathVariable Integer magasinId) {
+        // Récupérer les créneaux disponibles pour ce magasin
+        List<Disponible> disponibilites = disponibleRepository.findByIdMIdAndDispo(magasinId, true);
+
+        // Organiser les créneaux par date
+        Map<String, List<Map<String, Object>>> creneauxParDate = new HashMap<>();
+
+        for (Disponible dispo : disponibilites) {
+            String dateKey = dispo.getIdDate().getDateJour().toString();
+
+            Map<String, Object> creneauInfo = new HashMap<>();
+            creneauInfo.put("id", dispo.getIdCr().getId());
+            creneauInfo.put("nom", dispo.getIdCr().getNom());
+
+            if (!creneauxParDate.containsKey(dateKey)) {
+                creneauxParDate.put(dateKey, new ArrayList<>());
+            }
+
+            creneauxParDate.get(dateKey).add(creneauInfo);
+        }
+
+        return ResponseEntity.ok(creneauxParDate);
+    }
     @PostMapping("/{id}/choisir-retrait")
     @Operation(summary = "Choisir un magasin, une date et un créneau pour le retrait")
     public ResponseEntity<Map<String, Object>> choisirRetrait(
@@ -141,9 +166,12 @@ public class PanierController {
         // Appeler le service pour réserver le créneau
         Panier panier = panierService.choisirRetraitEtReserverCreneau(id, selection);
 
-        // Récupérer les données des objets sélectionnés
-        Magasin magasinChoisi = magasinRepository.findById(selection.getMagasinId())
-                .orElseThrow(() -> new RuntimeException("Magasin non trouvé"));
+        // Créer la réponse
+        Map<String, Object> response = new HashMap<>();
+        response.put("panier", panier);
+
+        // Ajouter les informations sur le choix effectué
+        Map<String, Object> choixRetrait = new HashMap<>();
 
         Jour jourChoisi = jourRepository.findById(selection.getJourId())
                 .orElseThrow(() -> new RuntimeException("Jour non trouvé"));
@@ -151,25 +179,17 @@ public class PanierController {
         Creneau creneauChoisi = creneauRepository.findById(selection.getCreneauId())
                 .orElseThrow(() -> new RuntimeException("Créneau non trouvé"));
 
-        // Récupérer tous les créneaux disponibles par date pour ce magasin
-        List<Disponible> disponibilites = disponibleRepository.findByIdMIdAndDispo(selection.getMagasinId(), true);
+        Magasin magasinChoisi = magasinRepository.findById(selection.getMagasinId())
+                .orElseThrow(() -> new RuntimeException("Magasin non trouvé"));
 
-        // Organiser les créneaux par date
-        Map<String, List<String>> creneauxParDate = new HashMap<>();
-        for (Disponible dispo : disponibilites) {
-            String dateKey = dispo.getIdDate().getDateJour().toString();
-            String creneauValue = dispo.getIdCr().getNom();
+        choixRetrait.put("dateId", jourChoisi.getId());
+        choixRetrait.put("date", jourChoisi.getDateJour().toString());
+        choixRetrait.put("creneauId", creneauChoisi.getId());
+        choixRetrait.put("creneau", creneauChoisi.getNom());
+        choixRetrait.put("magasinId", magasinChoisi.getId());
+        choixRetrait.put("magasin", magasinChoisi.getNomM());
 
-            creneauxParDate.computeIfAbsent(dateKey, k -> new ArrayList<>()).add(creneauValue);
-        }
-
-        // Créer la réponse
-        Map<String, Object> response = new HashMap<>();
-        response.put("panier", panier);
-        response.put("creneauxDisponibles", creneauxParDate);
-        response.put("jourChoisi", jourChoisi);
-        response.put("creneauChoisi", creneauChoisi);
-        response.put("magasinChoisi", magasinChoisi);
+        response.put("choixRetrait", choixRetrait);
 
         return ResponseEntity.ok(response);
     }
