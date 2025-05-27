@@ -1,6 +1,7 @@
 package com.pickandgo.dto;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public class ProduitDTO {
     private Integer id;
@@ -16,6 +17,9 @@ public class ProduitDTO {
     private Integer idCate;
     private Integer idR;
     private Integer idPr;
+    private List<ProduitDTO> produitsSimilaires;
+    private PromotionDTO promotion;
+    private List<MagasinStockDTO> disponibilites;
 
     // Constructeurs
     public ProduitDTO() {
@@ -142,5 +146,29 @@ public class ProduitDTO {
 
     public void setIdPr(Integer idPr) {
         this.idPr = idPr;
+    }
+
+    public List<ProduitDTO> getProduitsSimilaires() {
+        return produitsSimilaires;
+    }
+
+    public void setProduitsSimilaires(List<ProduitDTO> produitsSimilaires) {
+        this.produitsSimilaires = produitsSimilaires;
+    }
+
+    public PromotionDTO getPromotion() {
+        return promotion;
+    }
+
+    public void setPromotion(PromotionDTO promotion) {
+        this.promotion = promotion;
+    }
+
+    public List<MagasinStockDTO> getDisponibilites() {
+        return disponibilites;
+    }
+
+    public void setDisponibilites(List<MagasinStockDTO> disponibilites) {
+        this.disponibilites = disponibilites;
     }
 }

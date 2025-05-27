@@ -45,7 +45,8 @@ public class ProduitService {
 
     @Transactional
     public List<Produit> recommanderProduitsSimilaires(Integer idProduit) {
-        int nombreRecommandations =3;
+        int nombreRecommandations = 3;
+
         // Récupérer le produit de référence
         Produit produitReference = produitRepository.findById(idProduit)
                 .orElseThrow(() -> new RuntimeException("Produit non trouvé avec l'id: " + idProduit));
@@ -62,24 +63,12 @@ public class ProduitService {
                 .map(MotCle::getId)
                 .collect(Collectors.toList());
 
-        // Trouver tous les produits qui partagent au moins un mot-clé avec le produit de référence
-        // mais ne sont pas le produit lui-même
-        List<Produit> produitsSimilaires = produitRepository.findByMotsClesIdInAndIdNot(idMotsCles, idProduit);
+        // Utiliser la nouvelle méthode du repository
+        List<Produit> produits = produitRepository.findSimilarProducts(idMotsCles, idProduit);
 
-        // Calculer le score de similarité pour chaque produit (nombre de mots-clés en commun)
-        Map<Produit, Long> scoresSimilarite = produitsSimilaires.stream()
-                .collect(Collectors.toMap(
-                        produit -> produit,
-                        produit -> produit.getMotsCles().stream()
-                                .filter(mc -> idMotsCles.contains(mc.getId()))
-                                .count()
-                ));
-
-        // Trier les produits par score de similarité décroissant et limiter le nombre de recommandations
-        return scoresSimilarite.entrySet().stream()
-                .sorted(Map.Entry.<Produit, Long>comparingByValue().reversed())
+        // Limiter à 3 produits maximum
+        return produits.stream()
                 .limit(nombreRecommandations)
-                .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
     }
 
