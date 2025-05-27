@@ -1,11 +1,10 @@
 package com.pickandgo.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 @Configuration
 public class JacksonConfig {
@@ -14,8 +13,14 @@ public class JacksonConfig {
     public ObjectMapper objectMapper() {
         ObjectMapper mapper = new ObjectMapper();
 
-        // Désactive la sérialisation de références circulaires
-        mapper.disable(com.fasterxml.jackson.databind.SerializationFeature.FAIL_ON_EMPTY_BEANS);
+        // Enregistre le module pour les types Java 8 (LocalDate, etc.)
+        mapper.registerModule(new JavaTimeModule());
+
+        // Évite les erreurs liées aux objets vides
+        mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+
+        // Pour éviter les problèmes de sérialisation de dates (optionnel)
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
         return mapper;
     }
