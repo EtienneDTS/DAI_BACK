@@ -26,7 +26,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/panier")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:5173")
 @Tag(name = "Panier", description = "API pour la gestion du panier utilisateur")
 public class PanierController {
 
