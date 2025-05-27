@@ -22,6 +22,23 @@ public interface ProduitRepository extends JpaRepository<Produit, Integer> {
     @EntityGraph(attributePaths = {"motsCles", "rayon", "idCate"})
     Optional<Produit> findById(Integer id);
 
+    @Query(value = """
+    SELECT 
+        p.idP,
+        p.nomP,
+        p.marqueP,
+        SUM(c.quantiteP) AS total_commandes
+    FROM Panier pa
+    JOIN Constituer c ON pa.idPa = c.idPa
+    JOIN Produit p ON c.idP = p.idP
+    WHERE pa.idU = :idUtilisateur
+    GROUP BY p.idP, p.nomP, p.marqueP
+    ORDER BY total_commandes DESC
+    LIMIT 5
+    """, nativeQuery = true)
+    List<Object[]> findTopProduitsForUser(@Param("idUtilisateur") Integer idUtilisateur);
+
+
     @Query(nativeQuery = true, value = """
     SELECT DISTINCT p.idP FROM Produit p
     LEFT JOIN Definir d ON p.idP = d.idP
