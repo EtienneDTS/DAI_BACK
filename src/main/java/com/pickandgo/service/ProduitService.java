@@ -133,9 +133,17 @@ public class ProduitService {
 
     @Transactional(readOnly = true)
     public ProduitDTO getProduitById(Integer id) {
-        // Récupérer le produit avec toutes ses associations en une seule requête
+        // Récupérer le produit avec TOUTES ses associations en une seule requête
         Produit produit = produitRepository.findByIdWithAllAssociations(id)
                 .orElseThrow(() -> new RuntimeException("Produit non trouvé avec l'ID: " + id));
+
+        // S'assurer que les stockages sont bien chargés
+        if (produit.getStockages() == null || produit.getStockages().isEmpty()) {
+            Optional<Produit> produitAvecStockages = produitRepository.findByIdWithStockages(id);
+            if (produitAvecStockages.isPresent()) {
+                produit.setStockages(produitAvecStockages.get().getStockages());
+            }
+        }
 
         // Charger les produits similaires
         List<Produit> produitsSimilaires = recommanderProduitsSimilaires(id);
@@ -170,8 +178,8 @@ public class ProduitService {
             return Collections.emptyList();
         }
 
-        // Charger tous les produits similaires avec leurs détails complets
-        return produitRepository.findAllByIdsWithStockages(produitSimilaireIds);
+        // Utiliser findAllByIdWithAssociations au lieu de findAllByIdsWithStockages
+        return produitRepository.findAllByIdWithAssociations(produitSimilaireIds);
     }
 
     public Map<Integer, List<Produit>> findAllSimilarProducts(Map<Integer, List<Integer>> produitMotClesMap) {
