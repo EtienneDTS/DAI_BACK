@@ -156,29 +156,80 @@ public class DTOMapper {
     }
 
     public static ProduitDTO convertToDTO(Produit produit, List<Produit> similaires) {
-        ProduitDTO dto = convertToDTO(produit);
-        dto.setId(produit.getId());
-        dto.setNom(produit.getNom());
-        if (similaires != null) {
-            dto.setProduitsSimilaires(convertToProduitDTOList(similaires));
+        if (produit == null) {
+            return null;
+        }
+
+        ProduitDTO dto = new ProduitDTO(
+                produit.getId(),
+                produit.getNom(),
+                produit.getMarque(),
+                produit.getPrixUnitaire(),
+                produit.getPrixKg(),
+                produit.getPoids(),
+                produit.getConditionnement(),
+                produit.getBio(),
+                produit.getNutri(),
+                produit.getUrlImage(),
+                produit.getIdCate() != null ? produit.getIdCate().getId() : null,
+                produit.getRayon() != null ? produit.getRayon().getId() : null,
+                produit.getPromotion() != null ? produit.getPromotion().getId() : null,
+                produit.getNomCategorie(),
+                produit.getNomRayon()
+        );
+
+        // Ajout des mots-clés
+        if (produit.getMotsCles() != null) {
+            List<String> motsClesTexte = produit.getMotsCles().stream()
+                    .map(MotCle::getMotMc)
+                    .collect(Collectors.toList());
+            dto.setMotsCles(motsClesTexte);
         }
 
         // Ajouter les informations sur la promotion
-        if (produit != null && produit.getPromotion() != null) {
+        if (produit.getPromotion() != null) {
             dto.setPromotion(convertToDTO(produit.getPromotion()));
         }
 
         // Ajouter les informations sur les disponibilités en magasin
-        if (produit != null && produit.getStockages() != null) {
+        if (produit.getStockages() != null) {
             dto.setDisponibilites(convertToMagasinStockDTOList(produit.getStockages()));
         }
-        if (produit.getIdCate() != null) {
-            dto.setIdCate(produit.getIdCate().getId());
-            dto.setNomCategorie(produit.getIdCate().getNomCate());
-        }
-        if (produit.getRayon() != null) {
-            dto.setIdR(produit.getRayon().getId());
-            dto.setNomRayon(produit.getRayon().getNomR());
+
+        // Conversion simplifiée des produits similaires pour éviter la récursivité
+        if (similaires != null && !similaires.isEmpty()) {
+            List<ProduitDTO> similairesDTOs = similaires.stream()
+                    .map(similaire -> {
+                        ProduitDTO similaireDTO = new ProduitDTO(
+                                similaire.getId(),
+                                similaire.getNom(),
+                                similaire.getMarque(),
+                                similaire.getPrixUnitaire(),
+                                similaire.getPrixKg(),
+                                similaire.getPoids(),
+                                similaire.getConditionnement(),
+                                similaire.getBio(),
+                                similaire.getNutri(),
+                                similaire.getUrlImage(),
+                                similaire.getIdCate() != null ? similaire.getIdCate().getId() : null,
+                                similaire.getRayon() != null ? similaire.getRayon().getId() : null,
+                                similaire.getPromotion() != null ? similaire.getPromotion().getId() : null,
+                                similaire.getNomCategorie(),
+                                similaire.getNomRayon()
+                        );
+
+                        // Ajouter uniquement les mots-clés aux produits similaires
+                        if (similaire.getMotsCles() != null) {
+                            similaireDTO.setMotsCles(similaire.getMotsCles().stream()
+                                    .map(MotCle::getMotMc)
+                                    .collect(Collectors.toList()));
+                        }
+
+                        return similaireDTO;
+                    })
+                    .collect(Collectors.toList());
+
+            dto.setProduitsSimilaires(similairesDTOs);
         }
 
         return dto;
