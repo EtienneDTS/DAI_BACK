@@ -1,6 +1,5 @@
 package com.pickandgo.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -18,7 +17,6 @@ public class Commander {
     @MapsId("idPa")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "idPa", nullable = false)
-    @JsonBackReference("panier-commande")
     private Panier idPa;
 
     @MapsId("idM")
