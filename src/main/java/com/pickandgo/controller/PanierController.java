@@ -301,8 +301,9 @@ public class PanierController {
 public ResponseEntity<Panier> passerCommande(
         @PathVariable Integer idMagasin,
         @PathVariable Integer idCreneau,
-        @RequestParam Integer idPanier) {
-
+        @RequestParam Integer idPanier,
+        @RequestParam String dateC // <-- Ajout de la date fournie en string
+) {
     // 1. Récupérer panier d'origine
     Panier panierOriginal = panierRepository.findById(idPanier)
             .orElseThrow(() -> new RuntimeException("Panier introuvable"));
@@ -314,27 +315,35 @@ public ResponseEntity<Panier> passerCommande(
     Creneau creneau = creneauRepository.findById(idCreneau)
             .orElseThrow(() -> new RuntimeException("Créneau introuvable"));
 
-    // 3. Créer un nouveau panier
+    // 3. Convertir la date reçue (String → LocalDate)
+    LocalDate dateCommande;
+    try {
+        dateCommande = LocalDate.parse(dateC);
+    } catch (Exception e) {
+        throw new RuntimeException("Format de date invalide. Attendu : YYYY-MM-DD");
+    }
+
+    // 4. Créer un nouveau panier
     Panier nouveauPanier = new Panier();
     nouveauPanier.setStatus(Panier.StatutPanier.COMMANDE);
     nouveauPanier.setUtilisateur(panierOriginal.getUtilisateur());
     nouveauPanier.setPrixtotalPa(panierOriginal.getPrixtotalPa());
 
-    // 4. Copier les lignes du panier original
+    // 5. Copier les lignes du panier original
     List<Constituer> nouvellesLignes = new ArrayList<>();
     for (Constituer ligne : panierOriginal.getLignes()) {
         Constituer nouvelleLigne = new Constituer();
-        nouvelleLigne.setPanier(nouveauPanier); // très important pour la relation bidirectionnelle
+        nouvelleLigne.setPanier(nouveauPanier);
         nouvelleLigne.setProduit(ligne.getProduit());
         nouvelleLigne.setQuantite(ligne.getQuantite());
         nouvellesLignes.add(nouvelleLigne);
     }
     nouveauPanier.setLignes(nouvellesLignes);
 
-    // 5. Sauvegarder le panier pour obtenir son nouvel ID
+    // 6. Sauvegarder le panier pour obtenir son nouvel ID
     panierRepository.save(nouveauPanier);
 
-    // 6. Créer la commande associée
+    // 7. Créer la commande associée
     Commander commande = new Commander();
     CommanderId commandeId = new CommanderId();
     commandeId.setIdPa(nouveauPanier.getIdPanier());
@@ -343,18 +352,19 @@ public ResponseEntity<Panier> passerCommande(
     commande.setId(commandeId);
     commande.setIdPa(nouveauPanier);
     commande.setIdM(magasin);
-    commande.setDateC(LocalDate.now());
+    commande.setDateC(dateCommande); // <-- On utilise la date envoyée
     commande.setCreneauChoisi(String.valueOf(creneau.getId()));
 
     commanderRepository.save(commande);
 
-    // 7. Injecter infos transitoires pour la réponse JSON
+    // 8. Injecter infos transitoires pour la réponse JSON
     nouveauPanier.setDateC(commande.getDateC());
     nouveauPanier.setCreneauChoisi(commande.getCreneauChoisi());
     nouveauPanier.setMagasin(magasin);
 
     return ResponseEntity.ok(nouveauPanier);
 }
+
 
 
 
