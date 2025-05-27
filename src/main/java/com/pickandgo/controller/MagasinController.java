@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/magasins")
@@ -21,4 +22,19 @@ public class MagasinController {
         List<Magasin> magasins = magasinService.getTousLesMagasins();
         return ResponseEntity.ok(magasins);
     }
+
+    @GetMapping("/{idmagasin}/panier/{idpanier}/indisponible")
+    public ResponseEntity<?> getMagasinsAvecDisponibiliteAlternative(
+            @PathVariable("idpanier") Integer idPanier,
+            @PathVariable("idmagasin") Integer idMagasin) {
+
+        List<Map<String, Integer>> ids = magasinService.getMagasinsAvecDisponibiliteCompleteFormatee(idPanier, idMagasin);
+
+        if (ids.isEmpty()) {
+            return ResponseEntity.ok("Ce panier n'est disponible dans aucun autre magasin.");
+        }
+
+        return ResponseEntity.ok(ids);
+    }
+
 }
