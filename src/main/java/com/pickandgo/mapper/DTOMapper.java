@@ -2,32 +2,43 @@ package com.pickandgo.mapper;
 
 import com.pickandgo.dto.*;
 import com.pickandgo.model.*;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class DTOMapper {
 
-    // Méthodes pour convertir les entités en DTOs
     public static ProduitDTO convertToDTO(Produit produit) {
         if (produit == null) {
             return null;
         }
-        
-        return new ProduitDTO(
-            produit.getId(),  // Conversion de Integer à Long
-            produit.getNom(),
-            produit.getMarque(),
-            produit.getPrixUnitaire(),
-            produit.getPrixKg(),
-            produit.getPoids(),
-            produit.getConditionnement(),
-            produit.getBio(),
-            produit.getNutri(),
-            produit.getUrlImage(),
-            produit.getIdCate() != null ? produit.getIdCate().getId(): null,
-            produit.getRayon() != null ? produit.getRayon().getId() : null,
-            produit.getPromotion() != null ? produit.getPromotion().getId() : null
+
+        ProduitDTO dto = new ProduitDTO(
+                produit.getId(),  // Conversion de Integer à Long
+                produit.getNom(),
+                produit.getMarque(),
+                produit.getPrixUnitaire(),
+                produit.getPrixKg(),
+                produit.getPoids(),
+                produit.getConditionnement(),
+                produit.getBio(),
+                produit.getNutri(),
+                produit.getUrlImage(),
+                produit.getIdCate() != null ? produit.getIdCate().getId(): null,
+                produit.getRayon() != null ? produit.getRayon().getId() : null,
+                produit.getPromotion() != null ? produit.getPromotion().getId() : null
         );
+
+        // Ajout des mots-clés
+        if (produit.getMotsCles() != null) {
+            List<String> motsClesTexte = produit.getMotsCles().stream()
+                    .map(MotCle::getMotMc)  // On suppose que MotCle a un attribut 'libelle'
+                    .collect(Collectors.toList());
+            dto.setMotsCles(motsClesTexte);
+        }
+
+        return dto;
     }
     
     public static MagasinDTO convertToDTO(Magasin magasin) {
@@ -113,6 +124,55 @@ public class DTOMapper {
             stocker.getId() != null && stocker.getMagasin() != null ? Long.valueOf(stocker.getMagasin().getId()) : null,
             stocker.getQuantite()
         );
+    }
+
+    public static PromotionDTO convertToDTO(Promotion promotion) {
+        if (promotion == null) {
+            return null;
+        }
+
+        return new PromotionDTO(
+                promotion.getId(),
+                promotion.getNomPr(),
+                promotion.getUrlImagePromo(),
+                promotion.getTypePr()
+        );
+    }
+
+    public static List<MagasinStockDTO> convertToMagasinStockDTOList(List<Stocker> stockages) {
+        if (stockages == null || stockages.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        return stockages.stream()
+                .filter(s -> s.getMagasin() != null && s.getQuantite() > 0)
+                .map(s -> new MagasinStockDTO(
+                        s.getMagasin().getId(),
+                        s.getMagasin().getNomM(),
+                        s.getMagasin().getAdresseM(),
+                        s.getQuantite()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    public static ProduitDTO convertToDTO(Produit produit, List<Produit> similaires) {
+        ProduitDTO dto = convertToDTO(produit);
+
+        if (similaires != null) {
+            dto.setProduitsSimilaires(convertToProduitDTOList(similaires));
+        }
+
+        // Ajouter les informations sur la promotion
+        if (produit != null && produit.getPromotion() != null) {
+            dto.setPromotion(convertToDTO(produit.getPromotion()));
+        }
+
+        // Ajouter les informations sur les disponibilités en magasin
+        if (produit != null && produit.getStockages() != null) {
+            dto.setDisponibilites(convertToMagasinStockDTOList(produit.getStockages()));
+        }
+
+        return dto;
     }
     
     public static List<StockerDTO> convertToStockerDTOList(List<Stocker> stockerList) {

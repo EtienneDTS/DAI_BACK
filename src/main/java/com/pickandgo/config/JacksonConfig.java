@@ -1,11 +1,10 @@
 package com.pickandgo.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 @Configuration
 public class JacksonConfig {
@@ -14,8 +13,11 @@ public class JacksonConfig {
     public ObjectMapper objectMapper() {
         ObjectMapper mapper = new ObjectMapper();
 
-        // Désactive la sérialisation de références circulaires
-        mapper.disable(com.fasterxml.jackson.databind.SerializationFeature.FAIL_ON_EMPTY_BEANS);
+        mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+        mapper.registerModule(new JavaTimeModule());
+
+        // Pour avoir "2025-05-29" au lieu de [2025, 5, 29]
+        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
         return mapper;
     }

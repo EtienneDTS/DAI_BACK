@@ -1,6 +1,8 @@
 package com.pickandgo.service;
 
 import com.pickandgo.dto.NouveauProduitDTO;
+import com.pickandgo.dto.ProduitDTO;
+import com.pickandgo.mapper.DTOMapper;
 import com.pickandgo.model.Categorie;
 import com.pickandgo.model.MotCle;
 import com.pickandgo.model.Produit;
@@ -19,6 +21,7 @@ import com.pickandgo.repository.PromotionRepository;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -44,46 +47,45 @@ public class ProduitService {
         this.promotionRepository = promotionRepository;
     }
 
+
     @Transactional
     public List<Produit> recommanderProduitsSimilaires(Integer idProduit) {
-        int nombreRecommandations =3;
-        // Récupérer le produit de référence
+        int nombreRecommandations = 3;
+
         Produit produitReference = produitRepository.findById(idProduit)
                 .orElseThrow(() -> new RuntimeException("Produit non trouvé avec l'id: " + idProduit));
 
-        // Récupérer les mots-clés du produit de référence
         List<MotCle> motsClesProduit = produitReference.getMotsCles();
-
         if (motsClesProduit.isEmpty()) {
             return Collections.emptyList();
         }
 
-        // Extraire les IDs des mots-clés
         List<Integer> idMotsCles = motsClesProduit.stream()
                 .map(MotCle::getId)
                 .collect(Collectors.toList());
 
-        // Trouver tous les produits qui partagent au moins un mot-clé avec le produit de référence
-        // mais ne sont pas le produit lui-même
-        List<Produit> produitsSimilaires = produitRepository.findByMotsClesIdInAndIdNot(idMotsCles, idProduit);
+        // Récupérer les produits avec leur nombre de mots clés correspondants
+        Map<Integer, Long> produitIdToMatchCount = produitRepository.findProductIdsWithMatchCount(idMotsCles, idProduit);
 
-        // Calculer le score de similarité pour chaque produit (nombre de mots-clés en commun)
-        Map<Produit, Long> scoresSimilarite = produitsSimilaires.stream()
-                .collect(Collectors.toMap(
-                        produit -> produit,
-                        produit -> produit.getMotsCles().stream()
-                                .filter(mc -> idMotsCles.contains(mc.getId()))
-                                .count()
-                ));
+        if (produitIdToMatchCount.isEmpty()) {
+            return Collections.emptyList();
+        }
 
-        // Trier les produits par score de similarité décroissant et limiter le nombre de recommandations
-        return scoresSimilarite.entrySet().stream()
-                .sorted(Map.Entry.<Produit, Long>comparingByValue().reversed())
-                .limit(nombreRecommandations)
+        // Trier par nombre de mots-clés correspondants (décroissant)
+        List<Integer> produitSimilaireIds = produitIdToMatchCount.entrySet().stream()
+                .sorted(Map.Entry.<Integer, Long>comparingByValue().reversed())
                 .map(Map.Entry::getKey)
+                .limit(nombreRecommandations)
+                .collect(Collectors.toList());
+
+        // Récupérer les produits triés avec leurs associations
+        List<Produit> produitsSimilaires = produitRepository.findAllByIdWithAssociations(produitSimilaireIds);
+
+        // Préserver l'ordre de tri basé sur le nombre de correspondances
+        return produitsSimilaires.stream()
+                .sorted(Comparator.comparing(p -> -produitIdToMatchCount.get(p.getId())))
                 .collect(Collectors.toList());
     }
-
     @Transactional
     public Produit creerProduit(NouveauProduitDTO dto) {
 
@@ -129,8 +131,23 @@ public class ProduitService {
     }
 
     @Transactional
-    public Produit getProduitById(Integer id) {
-        return produitRepository.findById(id).orElse(null);
+    public ProduitDTO getProduitById(Integer id) {
+        Produit produit = produitRepository.findByIdWithAssociations(id).orElse(null);
+        if (produit == null) {
+            return null;
+        }
+
+        // Charger les stockages séparément
+        Produit produitWithStockages = produitRepository.findByIdWithStockages(id).orElse(null);
+        if (produitWithStockages != null) {
+            produit.setStockages(produitWithStockages.getStockages());
+        }
+
+        // Récupérer les produits similaires dans la même transaction
+        List<Produit> produitsSimilaires = recommanderProduitsSimilaires(id);
+
+        // Convertir en DTO pour éviter les problèmes de LazyInitialization
+        return DTOMapper.convertToDTO(produit, produitsSimilaires);
     }
     
     @Transactional

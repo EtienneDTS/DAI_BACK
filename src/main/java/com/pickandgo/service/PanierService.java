@@ -50,6 +50,7 @@ public class PanierService {
     @Autowired
     private StockerRepository stockerRepository;
 
+
     @Transactional
     public Panier ajouterProduitAuPanierUtilisateur(Integer idUtilisateur, Integer idProduit, Integer quantite) {
         // Trouver ou créer le panier de l'utilisateur
@@ -428,6 +429,19 @@ public class PanierService {
         // 5. Créer une commande à partir du panier utilisateur
         return panierUtilisateur;
     }
+
+    @Transactional
+    public Panier creerPanierPourUtilisateur(Integer utilisateurId) {
+        Utilisateur utilisateur = utilisateurRepository.findById(utilisateurId)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        Panier panier = new Panier();
+        panier.setUtilisateur(utilisateur);
+        panier.setStatus(Panier.StatutPanier.PANIER); // Supposant que cette enum existe
+        panier.setPrixtotalPa(BigDecimal.ZERO);
+
+        return panierRepository.save(panier);
+    }
     // Méthode pour passer une commande avec authentification
     @Transactional
     public Panier passerCommande(Integer panierId, Authentication authentication) {
@@ -565,15 +579,29 @@ public class PanierService {
         Panier panier = panierRepository.findByUtilisateurIdAndStatus(idUtilisateur, Panier.StatutPanier.PANIER)
                 .orElseThrow(() -> new RuntimeException("Panier non trouvé"));
 
+        // Ajout des produits un par un dans le panier
         for (Lister liaison : liaisonsProduits) {
             Produit produit = liaison.getProduit();
             Integer quantite = liaison.getQuantite();
             ajouterProduitAuPanierUtilisateur(idUtilisateur, produit.getId(), quantite);
         }
-        // Recharger le panier pour s'assurer que la collection 'lignes' est à jour
-        return panierRepository.findById(panier.getIdPanier())
+
+        // Recharger le panier pour que la liste 'lignes' soit à jour
+        panier = panierRepository.findById(panier.getIdPanier())
                 .orElseThrow(() -> new RuntimeException("Panier non trouvé après ajout"));
+
+        // Mettre à jour les quantités disponibles et le statut dispo pour chaque ligne
+        Integer magasinId = panier.getUtilisateur().getMagasin().getId();
+        panier.getLignes().forEach(ligne -> {
+            Integer stockDispo = stockerRepository.findQuantiteByProduitIdAndMagasinId(
+                    ligne.getProduit().getId(), magasinId).orElse(0);
+            ligne.setQuantiteDisponible(stockDispo);
+            ligne.setDispo(stockDispo >= ligne.getQuantite());
+        });
+
+        return panier;
     }
+
 
 
 
@@ -581,23 +609,16 @@ public class PanierService {
     //MODIFS SO POUR DISPO
     @Transactional
     public Panier getPanierUtilisateurAvecDisponibilite(Integer userId, Integer magasinId) {
-        // Rechercher un panier existant au statut PANIER pour cet utilisateur
-        Optional<Panier> panierOptional = panierRepository.findByUtilisateurIdAndStatus(
-                userId, Panier.StatutPanier.PANIER);
-
-        Panier panier = panierOptional.orElseThrow(() ->
-                new RuntimeException("Panier non trouvé pour cet utilisateur")
-        );
+        Panier panier = panierRepository.findByUtilisateurIdAndStatus(userId, Panier.StatutPanier.PANIER)
+                .orElseThrow(() -> new RuntimeException("Panier non trouvé"));
 
         for (Constituer ligne : panier.getLignes()) {
-            Integer produitId = ligne.getProduit().getId();
-
-            // Récupérer la quantité disponible de ce produit dans le magasin donné
-            Integer quantiteDispo = stockerRepository.findQuantiteByProduitIdAndMagasinId(produitId, magasinId);
-
-            ligne.setQuantiteDisponible(quantiteDispo != null ? quantiteDispo : 0);
+            Produit produit = ligne.getProduit();
+            Integer quantiteEnStock = stockerRepository.findQuantiteByProduitIdAndMagasinId(produit.getId(), magasinId)
+                    .orElse(0); // Assure-toi de retourner 0 si non trouvé
+            ligne.setQuantiteDisponible(quantiteEnStock);
+            ligne.setDispo(quantiteEnStock >= ligne.getQuantite());
         }
-
 
         return panier;
     }
@@ -606,6 +627,38 @@ public class PanierService {
     public Panier trouverPanierActifParUtilisateur(Integer idUtilisateur) {
         return panierRepository.findByUtilisateurIdAndStatus(idUtilisateur, Panier.StatutPanier.PANIER)
                 .orElse(null);
+    }
+
+    //RECUP PANIER EN COMMANDE
+    public List<Panier> getCommandesParMagasin(Integer magasinId) {
+        List<Panier.StatutPanier> statutsSouhaites = List.of(
+                Panier.StatutPanier.COMMANDE,
+                Panier.StatutPanier.EN_PREPARATION,
+                Panier.StatutPanier.PRET
+        );
+
+        List<Panier> paniers = panierRepository.findCommandesParMagasin(magasinId, statutsSouhaites);
+
+        for (Panier panier : paniers) {
+            List<Commander> commandes = panier.getCommandes();
+            if (!commandes.isEmpty()) {
+                Commander commande = commandes.get(0); // tu peux adapter si plusieurs
+                panier.setDateC(commande.getDateC());
+                panier.setMagasin(commande.getIdM());
+
+                // Récupération du nom du créneau à partir de l'ID (ex: "2" => "Matin 9h-11h")
+                try {
+                    int creneauId = Integer.parseInt(commande.getCreneauChoisi());
+                    creneauRepository.findById(creneauId).ifPresent(creneau -> {
+                        panier.setCreneauChoisi(creneau.getNom());
+                    });
+                } catch (NumberFormatException e) {
+                    panier.setCreneauChoisi("Inconnu");
+                }
+            }
+        }
+
+        return paniers;
     }
 
 

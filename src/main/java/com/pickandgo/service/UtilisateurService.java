@@ -65,4 +65,24 @@ public class UtilisateurService {
         utilisateur.setMagasin(magasin);
         return utilisateurRepository.save(utilisateur);
     }
+
+    @Transactional
+    public Utilisateur creerUtilisateurAnonymePourMagasin(Integer magasinId) {
+        Magasin magasin = magasinRepository.findById(magasinId)
+                .orElseThrow(() -> new RuntimeException("Magasin non trouvé avec l'ID: " + magasinId));
+
+        // Génération d'un identifiant unique pour l'email anonyme
+        String uniqueId = java.util.UUID.randomUUID().toString().substring(0, 8);
+
+        Utilisateur utilisateurAnonyme = new Utilisateur();
+        utilisateurAnonyme.setNomU("Anonyme");
+        utilisateurAnonyme.setPrenomU("Anonyme");
+        utilisateurAnonyme.setEmailU("anonyme_" + uniqueId + "@pickandgo.temp");
+        utilisateurAnonyme.setRole("CLIENT");
+        utilisateurAnonyme.setMotDePasse(java.util.UUID.randomUUID().toString());
+        utilisateurAnonyme.setAdresseU("Adresse temporaire");
+        utilisateurAnonyme.setMagasin(magasin);
+
+        return utilisateurRepository.save(utilisateurAnonyme);
+    }
 }

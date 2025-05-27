@@ -4,7 +4,11 @@ import com.pickandgo.dto.AjouterProduitDTO;
 import com.pickandgo.dto.ModifierQuantiteProduitDTO;
 import com.pickandgo.dto.SupprimerProduitEntierDTO;
 import com.pickandgo.dto.RetraitSelectionDTO;
-import com.pickandgo.model.Panier;
+import com.pickandgo.model.*;
+import com.pickandgo.repository.JourRepository;
+import com.pickandgo.repository.MagasinRepository;
+import com.pickandgo.repository.CreneauRepository;
+import com.pickandgo.repository.DisponibleRepository;
 import com.pickandgo.service.PanierService;
 import org.springframework.security.core.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,20 +21,30 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/panier")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "*")
 @Tag(name = "Panier", description = "API pour la gestion du panier utilisateur")
 public class PanierController {
 
     private final PanierService panierService;
+    private final JourRepository jourRepository;
+    private final MagasinRepository magasinRepository;
+    private final CreneauRepository creneauRepository;
+    private final DisponibleRepository disponibleRepository;
 
     @Autowired
-    public PanierController(PanierService panierService) {
+    public PanierController(PanierService panierService, JourRepository jourRepository, MagasinRepository magasinRepository, CreneauRepository creneauRepository, DisponibleRepository disponibleRepository) {
         this.panierService = panierService;
+        this.jourRepository = jourRepository;
+        this.magasinRepository = magasinRepository;
+        this.creneauRepository = creneauRepository;
+        this.disponibleRepository = disponibleRepository;
     }
 
     @GetMapping("/utilisateur/{id}")
@@ -119,13 +133,65 @@ public class PanierController {
         }
     }
 
+    @GetMapping("/disponibilites/{magasinId}")
+    @Operation(summary = "Récupérer les créneaux disponibles par date pour un magasin")
+    public ResponseEntity<Map<String, List<Map<String, Object>>>> getDisponibilites(@PathVariable Integer magasinId) {
+        // Récupérer les créneaux disponibles pour ce magasin
+        List<Disponible> disponibilites = disponibleRepository.findByIdMIdAndDispo(magasinId, true);
+
+        // Organiser les créneaux par date
+        Map<String, List<Map<String, Object>>> creneauxParDate = new HashMap<>();
+
+        for (Disponible dispo : disponibilites) {
+            String dateKey = dispo.getIdDate().getDateJour().toString();
+
+            Map<String, Object> creneauInfo = new HashMap<>();
+            creneauInfo.put("id", dispo.getIdCr().getId());
+            creneauInfo.put("nom", dispo.getIdCr().getNom());
+
+            if (!creneauxParDate.containsKey(dateKey)) {
+                creneauxParDate.put(dateKey, new ArrayList<>());
+            }
+
+            creneauxParDate.get(dateKey).add(creneauInfo);
+        }
+
+        return ResponseEntity.ok(creneauxParDate);
+    }
     @PostMapping("/{id}/choisir-retrait")
     @Operation(summary = "Choisir un magasin, une date et un créneau pour le retrait")
-    public ResponseEntity<Panier> choisirRetrait(
+    public ResponseEntity<Map<String, Object>> choisirRetrait(
             @PathVariable Integer id,
             @RequestBody RetraitSelectionDTO selection) {
+        // Appeler le service pour réserver le créneau
         Panier panier = panierService.choisirRetraitEtReserverCreneau(id, selection);
-        return ResponseEntity.ok(panier);
+
+        // Créer la réponse
+        Map<String, Object> response = new HashMap<>();
+        response.put("panier", panier);
+
+        // Ajouter les informations sur le choix effectué
+        Map<String, Object> choixRetrait = new HashMap<>();
+
+        Jour jourChoisi = jourRepository.findById(selection.getJourId())
+                .orElseThrow(() -> new RuntimeException("Jour non trouvé"));
+
+        Creneau creneauChoisi = creneauRepository.findById(selection.getCreneauId())
+                .orElseThrow(() -> new RuntimeException("Créneau non trouvé"));
+
+        Magasin magasinChoisi = magasinRepository.findById(selection.getMagasinId())
+                .orElseThrow(() -> new RuntimeException("Magasin non trouvé"));
+
+        choixRetrait.put("dateId", jourChoisi.getId());
+        choixRetrait.put("date", jourChoisi.getDateJour().toString());
+        choixRetrait.put("creneauId", creneauChoisi.getId());
+        choixRetrait.put("creneau", creneauChoisi.getNom());
+        choixRetrait.put("magasinId", magasinChoisi.getId());
+        choixRetrait.put("magasin", magasinChoisi.getNomM());
+
+        response.put("choixRetrait", choixRetrait);
+
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}/demarrer-preparation")
@@ -210,6 +276,21 @@ public class PanierController {
             @PathVariable Integer magasinId) {
         Panier panier = panierService.getPanierUtilisateurAvecDisponibilite(userId, magasinId);
         return ResponseEntity.ok(panier);
+    }
+
+    //RECUPERER TOUTES LES COMMANDES D'UN MAGASIN (HORS PANIER)
+    @GetMapping("/magasin/{magasinId}/commandes")
+    @Operation(summary = "Récupérer toutes les commandes d'un magasin")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Commandes trouvées"),
+            @ApiResponse(responseCode = "404", description = "Magasin non trouvé")
+    })
+    public ResponseEntity<?> getCommandesParMagasin(@PathVariable Integer magasinId) {
+        try {
+            return ResponseEntity.ok(panierService.getCommandesParMagasin(magasinId));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur lors de la récupération des commandes : " + e.getMessage());
+        }
     }
 
 

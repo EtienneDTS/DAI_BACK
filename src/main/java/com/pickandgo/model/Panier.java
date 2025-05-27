@@ -1,5 +1,6 @@
 package com.pickandgo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
@@ -7,6 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,4 +45,23 @@ public class Panier {
         PRET,
         RECUPERE
     }
+
+    @OneToMany(mappedBy = "idPa", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference("panier-commande")
+    @JsonIgnore
+    private List<Commander> commandes = new ArrayList<>();
+
+
+    //Test pour nom créneau
+    @Transient
+    @JsonProperty("dateC")
+    private LocalDate dateC;
+
+    @Transient
+    @JsonProperty("creneauChoisi")
+    private String creneauChoisi;
+
+    @Transient
+    @JsonProperty("magasin")
+    private Magasin magasin;
 }
