@@ -97,4 +97,53 @@ public interface ProduitRepository extends JpaRepository<Produit, Integer> {
     LIMIT 5
     """, nativeQuery = true)
     List<Object[]> findTopProduitsForUser(@Param("idUtilisateur") Integer idUtilisateur);
+
+
+    @Query("SELECT DISTINCT p FROM Produit p " +
+            "LEFT JOIN FETCH p.idCate " +
+            "LEFT JOIN FETCH p.rayon " +
+            "LEFT JOIN FETCH p.promotion " +
+            "LEFT JOIN FETCH p.motsCles")
+    List<Produit> findAllWithAssociations();
+
+    @Query("SELECT DISTINCT p FROM Produit p " +
+            "LEFT JOIN FETCH p.stockages s " +
+            "LEFT JOIN FETCH s.magasin " +
+            "WHERE p.id IN :ids")
+    List<Produit> findAllByIdsWithStockages(@Param("ids") List<Integer> ids);
+
+    @Query("SELECT DISTINCT p FROM Produit p " +
+            "LEFT JOIN FETCH p.idCate " +
+            "LEFT JOIN FETCH p.rayon " +
+            "LEFT JOIN FETCH p.promotion " +
+            "LEFT JOIN FETCH p.motsCles " +
+            "LEFT JOIN FETCH p.stockages s " +
+            "LEFT JOIN FETCH s.magasin " +
+            "WHERE p.id = :id")
+    Optional<Produit> findByIdWithAllAssociations(@Param("id") Integer id);
+
+    @Query("SELECT p1.id AS produitId, p2.id AS similaireId FROM Produit p1 " +
+            "JOIN p1.motsCles mc1 " +
+            "JOIN Produit p2 ON p2.id <> p1.id " +
+            "JOIN p2.motsCles mc2 ON mc2.id = mc1.id " +
+            "GROUP BY p1.id, p2.id " +
+            "HAVING COUNT(DISTINCT mc2.id) > 0")
+    List<Object[]> findAllSimilarProductsRaw();
+
+    default Map<Integer, List<Integer>> findAllSimilarProductIds() {
+        // Cette méthode utilisera les résultats de findAllSimilarProductsRaw
+        // et retournera une Map<Integer, List<Integer>> où la clé est l'id du produit
+        // et la valeur est une liste d'ids de produits similaires
+        List<Object[]> rawResults = findAllSimilarProductsRaw();
+        Map<Integer, List<Integer>> result = new java.util.HashMap<>();
+
+        for (Object[] row : rawResults) {
+            Integer produitId = (Integer) row[0];
+            Integer similaireId = (Integer) row[1];
+
+            result.computeIfAbsent(produitId, k -> new java.util.ArrayList<>()).add(similaireId);
+        }
+
+        return result;
+    }
 }

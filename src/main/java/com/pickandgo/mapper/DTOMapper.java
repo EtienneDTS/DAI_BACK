@@ -157,7 +157,8 @@ public class DTOMapper {
 
     public static ProduitDTO convertToDTO(Produit produit, List<Produit> similaires) {
         ProduitDTO dto = convertToDTO(produit);
-
+        dto.setId(produit.getId());
+        dto.setNom(produit.getNom());
         if (similaires != null) {
             dto.setProduitsSimilaires(convertToProduitDTOList(similaires));
         }
@@ -170,6 +171,14 @@ public class DTOMapper {
         // Ajouter les informations sur les disponibilités en magasin
         if (produit != null && produit.getStockages() != null) {
             dto.setDisponibilites(convertToMagasinStockDTOList(produit.getStockages()));
+        }
+        if (produit.getIdCate() != null) {
+            dto.setIdCate(produit.getIdCate().getId());
+            dto.setNomCategorie(produit.getIdCate().getNomCate());
+        }
+        if (produit.getRayon() != null) {
+            dto.setIdR(produit.getRayon().getId());
+            dto.setNomRayon(produit.getRayon().getNomR());
         }
 
         return dto;
