@@ -1,6 +1,8 @@
 package com.pickandgo.service;
 
 import com.pickandgo.dto.NouveauProduitDTO;
+import com.pickandgo.dto.ProduitDTO;
+import com.pickandgo.mapper.DTOMapper;
 import com.pickandgo.model.Categorie;
 import com.pickandgo.model.MotCle;
 import com.pickandgo.model.Produit;
@@ -122,8 +124,23 @@ public class ProduitService {
     }
 
     @Transactional
-    public Produit getProduitById(Integer id) {
-        return produitRepository.findById(id).orElse(null);
+    public ProduitDTO getProduitById(Integer id) {
+        Produit produit = produitRepository.findByIdWithAssociations(id).orElse(null);
+        if (produit == null) {
+            return null;
+        }
+
+        // Charger les stockages séparément
+        Produit produitWithStockages = produitRepository.findByIdWithStockages(id).orElse(null);
+        if (produitWithStockages != null) {
+            produit.setStockages(produitWithStockages.getStockages());
+        }
+
+        // Récupérer les produits similaires dans la même transaction
+        List<Produit> produitsSimilaires = recommanderProduitsSimilaires(id);
+
+        // Convertir en DTO pour éviter les problèmes de LazyInitialization
+        return DTOMapper.convertToDTO(produit, produitsSimilaires);
     }
     
     @Transactional

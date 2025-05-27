@@ -23,19 +23,32 @@ public interface ProduitRepository extends JpaRepository<Produit, Integer> {
     Optional<Produit> findById(Integer id);
 
 
-    @Query("SELECT DISTINCT p.id FROM Produit p " +
-            "JOIN Definir d ON p.id = d.id.idP " +
-            "WHERE d.id.idMc IN :motsClesIds " +
-            "AND p.id != :produitId")
-    List<Integer> findSimilarProductIds(@Param("motsClesIds") List<Integer> motsClesIds,
-                                        @Param("produitId") Integer produitId);
-
     @Query("SELECT p FROM Produit p " +
-            "LEFT JOIN FETCH p.stockages " +
-            "LEFT JOIN FETCH p.motsCles " +
             "LEFT JOIN FETCH p.idCate " +
             "LEFT JOIN FETCH p.rayon " +
             "LEFT JOIN FETCH p.promotion " +
+            "LEFT JOIN FETCH p.motsCles " +
+            "WHERE p.id = :id")
+    Optional<Produit> findByIdWithAssociations(@Param("id") Integer id);
+
+    @Query("SELECT p FROM Produit p " +
+            "LEFT JOIN FETCH p.stockages s " +
+            "LEFT JOIN FETCH s.magasin " +
+            "WHERE p.id = :id")
+    Optional<Produit> findByIdWithStockages(@Param("id") Integer id);
+
+    @Query("SELECT DISTINCT p.id FROM Produit p " +
+            "JOIN p.motsCles mc " +
+            "WHERE mc.id IN :motsClesIds " +
+            "AND p.id <> :produitId")
+    List<Integer> findSimilarProductIds(@Param("motsClesIds") List<Integer> motsClesIds,
+                                        @Param("produitId") Integer produitId);
+
+    @Query("SELECT DISTINCT p FROM Produit p " +
+            "LEFT JOIN FETCH p.idCate " +
+            "LEFT JOIN FETCH p.rayon " +
+            "LEFT JOIN FETCH p.promotion " +
+            "LEFT JOIN FETCH p.motsCles " +
             "WHERE p.id IN :ids")
     List<Produit> findAllByIdWithAssociations(@Param("ids") List<Integer> ids);
 

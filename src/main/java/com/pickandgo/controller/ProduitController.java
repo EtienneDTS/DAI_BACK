@@ -38,18 +38,12 @@ public class ProduitController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProduitDTO> getProduitById(@PathVariable Integer id) {
-        try {
-            Produit produit = produitService.getProduitById(id);
-            if (produit != null) {
-                List<Produit> similaires = produitService.recommanderProduitsSimilaires(id);
-                ProduitDTO produitDTO = DTOMapper.convertToDTO(produit, similaires);
-                return ResponseEntity.ok(produitDTO);
-            }
+    public ResponseEntity<?> getProduitById(@PathVariable Integer id) {
+        ProduitDTO produit = produitService.getProduitById(id);
+        if (produit == null) {
             return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+        return ResponseEntity.ok(produit);
     }
     
     @GetMapping("/{id}/similaires")
@@ -89,46 +83,5 @@ public class ProduitController {
         }
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<ProduitDTO> updateProduit(@PathVariable Integer id, @RequestBody ProduitDTO produitDTO) {
-        try {
-            Produit existingProduit = produitService.getProduitById(id);
-            if (existingProduit != null) {
-                // Mise à jour des attributs simples
-                existingProduit.setNom(produitDTO.getNom());
-                existingProduit.setMarque(produitDTO.getMarque());
-                existingProduit.setPrixUnitaire(produitDTO.getPrixUnitaire());
-                existingProduit.setPrixKg(produitDTO.getPrixKg());
-                existingProduit.setPoids(produitDTO.getPoids());
-                existingProduit.setConditionnement(produitDTO.getConditionnement());
-                existingProduit.setBio(produitDTO.getBio());
-                existingProduit.setNutri(produitDTO.getNutri());
-                existingProduit.setUrlImage(produitDTO.getUrlImage());
-                
-                // Pour terminer la mise à jour avec les associations, vous auriez besoin d'autres services
-                
-                // Cette partie est temporaire et devrait être remplacée par la véritable mise à jour
-                return ResponseEntity.ok(DTOMapper.convertToDTO(existingProduit));
-            }
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProduit(@PathVariable Integer id) {
-        try {
-            // Vérifier si le produit existe avant de le supprimer
-            Produit existingProduit = produitService.getProduitById(id);
-            if (existingProduit != null) {
-                // Implémentez la méthode deleteProduit dans votre service
-                // produitService.deleteProduit(id);
-                return ResponseEntity.noContent().build();
-            }
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
 }
