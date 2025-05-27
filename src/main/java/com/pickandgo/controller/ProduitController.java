@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/produits")
@@ -25,16 +26,13 @@ public class ProduitController {
     public ResponseEntity<List<ProduitDTO>> getAllProduits() {
         try {
             List<Produit> produits = produitService.getAllProduits();
-            List<ProduitDTO> produitDTOs = new ArrayList<>();
-
-            for (Produit produit : produits) {
-                List<Produit> similaires = produitService.recommanderProduitsSimilaires(produit.getId());
-                ProduitDTO dto = DTOMapper.convertToDTO(produit, similaires);
-                produitDTOs.add(dto);
-            }
+            List<ProduitDTO> produitDTOs = produits.stream()
+                    .map(DTOMapper::convertToDTO) // Utiliser la version sans produits similaires
+                    .collect(Collectors.toList());
 
             return ResponseEntity.ok(produitDTOs);
         } catch (Exception e) {
+            e.printStackTrace(); // Ajouter pour déboguer
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

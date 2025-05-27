@@ -43,17 +43,16 @@ public class ProduitService {
         this.promotionRepository = promotionRepository;
     }
 
+
     @Transactional
     public List<Produit> recommanderProduitsSimilaires(Integer idProduit) {
         int nombreRecommandations = 3;
 
-        // Récupérer le produit de référence
+        // Récupérer le produit avec ses mots-clés en une seule requête
         Produit produitReference = produitRepository.findById(idProduit)
                 .orElseThrow(() -> new RuntimeException("Produit non trouvé avec l'id: " + idProduit));
 
-        // Récupérer les mots-clés du produit de référence
         List<MotCle> motsClesProduit = produitReference.getMotsCles();
-
         if (motsClesProduit.isEmpty()) {
             return Collections.emptyList();
         }
@@ -63,13 +62,20 @@ public class ProduitService {
                 .map(MotCle::getId)
                 .collect(Collectors.toList());
 
-        // Utiliser la nouvelle méthode du repository
-        List<Produit> produits = produitRepository.findSimilarProducts(idMotsCles, idProduit);
+        // Utiliser une seule requête pour obtenir tous les IDs des produits similaires
+        List<Integer> produitSimilaireIds = produitRepository.findSimilarProductIds(idMotsCles, idProduit);
+
+        if (produitSimilaireIds.isEmpty()) {
+            return Collections.emptyList();
+        }
 
         // Limiter à 3 produits maximum
-        return produits.stream()
-                .limit(nombreRecommandations)
-                .collect(Collectors.toList());
+        if (produitSimilaireIds.size() > nombreRecommandations) {
+            produitSimilaireIds = produitSimilaireIds.subList(0, nombreRecommandations);
+        }
+
+        // Charger tous les produits en une seule requête avec leurs associations
+        return produitRepository.findAllByIdWithAssociations(produitSimilaireIds);
     }
 
     @Transactional

@@ -22,17 +22,22 @@ public interface ProduitRepository extends JpaRepository<Produit, Integer> {
     @EntityGraph(attributePaths = {"motsCles", "rayon", "idCate"})
     Optional<Produit> findById(Integer id);
 
-    @Query(nativeQuery = true, value = """
-    SELECT DISTINCT p.idP FROM Produit p
-    LEFT JOIN Definir d ON p.idP = d.idP
-    WHERE EXISTS (
-        SELECT 1 FROM Definir d2
-        WHERE d2.idP = p.idP AND d2.idMc IN :motsClesIds
-    )
-    AND p.idP != :produitId
-    """)
+
+    @Query("SELECT DISTINCT p.id FROM Produit p " +
+            "JOIN Definir d ON p.id = d.id.idP " +
+            "WHERE d.id.idMc IN :motsClesIds " +
+            "AND p.id != :produitId")
     List<Integer> findSimilarProductIds(@Param("motsClesIds") List<Integer> motsClesIds,
                                         @Param("produitId") Integer produitId);
+
+    @Query("SELECT p FROM Produit p " +
+            "LEFT JOIN FETCH p.stockages " +
+            "LEFT JOIN FETCH p.motsCles " +
+            "LEFT JOIN FETCH p.idCate " +
+            "LEFT JOIN FETCH p.rayon " +
+            "LEFT JOIN FETCH p.promotion " +
+            "WHERE p.id IN :ids")
+    List<Produit> findAllByIdWithAssociations(@Param("ids") List<Integer> ids);
 
     default List<Produit> findSimilarProducts(List<Integer> motsClesIds, Integer produitId) {
         List<Integer> productIds = findSimilarProductIds(motsClesIds, produitId);
