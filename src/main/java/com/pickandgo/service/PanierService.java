@@ -11,8 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.core.Authentication;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class PanierService {
@@ -623,8 +623,35 @@ public class PanierService {
                 Panier.StatutPanier.EN_PREPARATION,
                 Panier.StatutPanier.PRET
         );
-        return panierRepository.findCommandesParMagasin(magasinId, statutsSouhaites);
+
+        List<Panier> paniers = panierRepository.findCommandesParMagasin(magasinId, statutsSouhaites);
+
+        for (Panier panier : paniers) {
+            List<Commander> commandes = panier.getCommandes();
+            if (!commandes.isEmpty()) {
+                Commander commande = commandes.get(0); // tu peux adapter si plusieurs
+                panier.setDateC(commande.getDateC());
+                panier.setMagasin(commande.getIdM());
+
+                // Récupération du nom du créneau à partir de l'ID (ex: "2" => "Matin 9h-11h")
+                try {
+                    int creneauId = Integer.parseInt(commande.getCreneauChoisi());
+                    creneauRepository.findById(creneauId).ifPresent(creneau -> {
+                        panier.setCreneauChoisi(creneau.getNom());
+                    });
+                } catch (NumberFormatException e) {
+                    panier.setCreneauChoisi("Inconnu");
+                }
+            }
+        }
+
+        return paniers;
     }
+
+
+
+
+
 
 
 }
