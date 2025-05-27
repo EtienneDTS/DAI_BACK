@@ -112,13 +112,11 @@ public interface ProduitRepository extends JpaRepository<Produit, Integer> {
             "WHERE p.id IN :ids")
     List<Produit> findAllByIdsWithStockages(@Param("ids") List<Integer> ids);
 
-    @Query("SELECT DISTINCT p FROM Produit p " +
+    @Query("SELECT p FROM Produit p " +
             "LEFT JOIN FETCH p.idCate " +
             "LEFT JOIN FETCH p.rayon " +
             "LEFT JOIN FETCH p.promotion " +
             "LEFT JOIN FETCH p.motsCles " +
-            "LEFT JOIN FETCH p.stockages s " +
-            "LEFT JOIN FETCH s.magasin " +
             "WHERE p.id = :id")
     Optional<Produit> findByIdWithAllAssociations(@Param("id") Integer id);
 

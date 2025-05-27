@@ -34,19 +34,16 @@ public class ProduitController {
         }
     }
 
+
     @GetMapping("/{id}")
-    public ResponseEntity<?> getProduitById(@PathVariable Integer id) {
+    public ResponseEntity<ProduitDTO> getProduitById(@PathVariable Integer id) {
         try {
             ProduitDTO produit = produitService.getProduitById(id);
-            if (produit == null) {
-                return ResponseEntity.notFound().build();
-            }
             return ResponseEntity.ok(produit);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
     }
-
 
     @GetMapping("/recommandations/{id}")
     public ResponseEntity<List<ProduitDTO>> getProduitsSimilaires(@PathVariable Integer id) {
