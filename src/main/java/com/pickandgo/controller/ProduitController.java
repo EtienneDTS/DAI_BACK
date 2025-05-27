@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,32 +26,35 @@ public class ProduitController {
     @GetMapping
     public ResponseEntity<List<ProduitDTO>> getAllProduits() {
         try {
-            List<Produit> produits = produitService.getAllProduits();
-            List<ProduitDTO> produitDTOs = produits.stream()
-                    .map(DTOMapper::convertToDTO) // Utiliser la version sans produits similaires
-                    .collect(Collectors.toList());
-
-            return ResponseEntity.ok(produitDTOs);
+            List<ProduitDTO> produits = produitService.getAllProduits();
+            return ResponseEntity.ok(produits);
         } catch (Exception e) {
-            e.printStackTrace(); // Ajouter pour déboguer
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getProduitById(@PathVariable Integer id) {
-        ProduitDTO produit = produitService.getProduitById(id);
-        if (produit == null) {
+        try {
+            ProduitDTO produit = produitService.getProduitById(id);
+            if (produit == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(produit);
+        } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(produit);
     }
-    
-    @GetMapping("/{id}/similaires")
+
+
+    @GetMapping("/recommandations/{id}")
     public ResponseEntity<List<ProduitDTO>> getProduitsSimilaires(@PathVariable Integer id) {
         try {
             List<Produit> produitsSimilaires = produitService.recommanderProduitsSimilaires(id);
-            List<ProduitDTO> produitDTOs = DTOMapper.convertToProduitDTOList(produitsSimilaires);
+            List<ProduitDTO> produitDTOs = produitsSimilaires.stream()
+                    .map(produit -> DTOMapper.convertToDTO(produit, new ArrayList<>()))
+                    .collect(Collectors.toList());
             return ResponseEntity.ok(produitDTOs);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -67,11 +71,6 @@ public class ProduitController {
         }
     }
 
-    @GetMapping("/recommandations/{idU}")
-    public ResponseEntity<List<Produit>> recommanderProduits(@PathVariable Integer idU) {
-        List<Produit> recommandations = produitService.recommanderProduitsPourUtilisateur(idU);
-        return ResponseEntity.ok(recommandations);
-    }
 
 
 
@@ -89,16 +88,36 @@ public class ProduitController {
             produit.setBio(produitDTO.getBio());
             produit.setNutri(produitDTO.getNutri());
             produit.setUrlImage(produitDTO.getUrlImage());
-            
+
             // Cette partie nécessite probablement d'autres services pour récupérer les objets complets
             // Utilisez creerProduit avec NouveauProduitDTO à la place
-            
-            Produit savedProduit = produitService.getAllProduits().get(0); // Temporaire - à remplacer par la véritable sauvegarde
-            
-            return new ResponseEntity<>(DTOMapper.convertToDTO(savedProduit), HttpStatus.CREATED);
+
+            Produit savedProduit = produitService.creerProduit(convertToDTONouveauProduit(produitDTO));
+
+            // Conversion en utilisant la méthode correcte avec liste de produits similaires vide
+            return new ResponseEntity<>(DTOMapper.convertToDTO(savedProduit, new ArrayList<>()), HttpStatus.CREATED);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    // Méthode utilitaire pour convertir ProduitDTO en NouveauProduitDTO
+    private com.pickandgo.dto.NouveauProduitDTO convertToDTONouveauProduit(ProduitDTO produitDTO) {
+        com.pickandgo.dto.NouveauProduitDTO nouveauDTO = new com.pickandgo.dto.NouveauProduitDTO();
+        nouveauDTO.setNomP(produitDTO.getNom());
+        nouveauDTO.setMarqueP(produitDTO.getMarque());
+        nouveauDTO.setPrixUnitaireP(produitDTO.getPrixUnitaire());
+        nouveauDTO.setPrixKgP(produitDTO.getPrixKg());
+        nouveauDTO.setPoidsP(produitDTO.getPoids());
+        nouveauDTO.setConditionnementP(produitDTO.getConditionnement());
+        nouveauDTO.setBioP(produitDTO.getBio());
+        nouveauDTO.setNutriP(produitDTO.getNutri());
+        nouveauDTO.setUrlImage(produitDTO.getUrlImage());
+        nouveauDTO.setIdCate(produitDTO.getIdCate());
+        nouveauDTO.setIdR(produitDTO.getIdR());
+        nouveauDTO.setIdPr(produitDTO.getIdPr());
+        return nouveauDTO;
     }
 
 

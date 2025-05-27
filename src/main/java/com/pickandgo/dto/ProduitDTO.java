@@ -1,5 +1,7 @@
 package com.pickandgo.dto;
 
+import software.amazon.awssdk.services.rds.endpoints.internal.Value;
+
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -17,18 +19,22 @@ public class ProduitDTO {
     private Integer idCate;
     private Integer idR;
     private Integer idPr;
+    private String nomCategorie;
+    private String nomRayon;
     private List<ProduitDTO> produitsSimilaires;
     private PromotionDTO promotion;
     private List<MagasinStockDTO> disponibilites;
     private List<String> motsCles;
 
     // Constructeurs
-    public ProduitDTO() {
+    public ProduitDTO(String nomCategorie, String nomRayon) {
+        this.nomCategorie = nomCategorie;
+        this.nomRayon = nomRayon;
     }
 
     public ProduitDTO(Integer id, String nomP, String marqueP, BigDecimal prixUnitaireP, BigDecimal prixKgP,
                       Integer poidsP, String conditionnementP, Boolean bioP, String nutriP,
-                     String urlImage, Integer idCate, Integer idR, Integer idPr) {
+                      String urlImage, Integer idCate, Integer idR, Integer idPr, String nomCategorie, String nomRayon) {
         this.id = id;
         this.nom = nomP;
         this.marque = marqueP;
@@ -42,6 +48,11 @@ public class ProduitDTO {
         this.idCate = idCate;
         this.idR = idR;
         this.idPr = idPr;
+        this.nomCategorie = nomCategorie;
+        this.nomRayon = nomRayon;
+    }
+
+    public ProduitDTO(Integer id, String nom, String marque, BigDecimal prixUnitaire, BigDecimal prixKg, Integer poids, String conditionnement, Boolean bio, String nutri, String urlImage, Integer integer, Integer integer1, Integer integer2) {
     }
 
     // Getters et Setters
@@ -179,5 +190,18 @@ public class ProduitDTO {
 
     public void setMotsCles(List<String> motsCles) {
         this.motsCles = motsCles;
+    }
+    public void setNomCategorie(String nomCategorie) {
+        this.nomCategorie = nomCategorie;
+    }
+
+    public String getNomCategorie() {
+        return nomCategorie;
+    }
+    public void setNomRayon(String nomRayon) {
+        this.nomRayon = nomRayon;
+    }
+    public String getNomRayon() {
+        return nomRayon;
     }
 }
