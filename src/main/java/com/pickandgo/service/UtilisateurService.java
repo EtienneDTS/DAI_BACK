@@ -78,7 +78,7 @@ public class UtilisateurService {
         utilisateurAnonyme.setNomU("Anonyme");
         utilisateurAnonyme.setPrenomU("Anonyme");
         utilisateurAnonyme.setEmailU("anonyme_" + uniqueId + "@pickandgo.temp");
-        utilisateurAnonyme.setRole("ANONYME");
+        utilisateurAnonyme.setRole("CLIENT");
         utilisateurAnonyme.setMotDePasse(java.util.UUID.randomUUID().toString());
         utilisateurAnonyme.setAdresseU("Adresse temporaire");
         utilisateurAnonyme.setMagasin(magasin);
