@@ -429,6 +429,19 @@ public class PanierService {
         // 5. Créer une commande à partir du panier utilisateur
         return panierUtilisateur;
     }
+
+    @Transactional
+    public Panier creerPanierPourUtilisateur(Integer utilisateurId) {
+        Utilisateur utilisateur = utilisateurRepository.findById(utilisateurId)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        Panier panier = new Panier();
+        panier.setUtilisateur(utilisateur);
+        panier.setStatus(Panier.StatutPanier.PANIER); // Supposant que cette enum existe
+        panier.setPrixtotalPa(BigDecimal.ZERO);
+
+        return panierRepository.save(panier);
+    }
     // Méthode pour passer une commande avec authentification
     @Transactional
     public Panier passerCommande(Integer panierId, Authentication authentication) {

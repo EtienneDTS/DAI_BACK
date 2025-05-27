@@ -20,6 +20,7 @@ public class ProduitDTO {
     private List<ProduitDTO> produitsSimilaires;
     private PromotionDTO promotion;
     private List<MagasinStockDTO> disponibilites;
+    private List<String> motsCles;
 
     // Constructeurs
     public ProduitDTO() {
@@ -170,5 +171,13 @@ public class ProduitDTO {
 
     public void setDisponibilites(List<MagasinStockDTO> disponibilites) {
         this.disponibilites = disponibilites;
+    }
+
+    public List<String> getMotsCles() {
+        return motsCles;
+    }
+
+    public void setMotsCles(List<String> motsCles) {
+        this.motsCles = motsCles;
     }
 }
