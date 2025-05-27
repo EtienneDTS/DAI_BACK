@@ -5,10 +5,7 @@ import com.pickandgo.dto.ModifierQuantiteProduitDTO;
 import com.pickandgo.dto.SupprimerProduitEntierDTO;
 import com.pickandgo.dto.RetraitSelectionDTO;
 import com.pickandgo.model.*;
-import com.pickandgo.repository.JourRepository;
-import com.pickandgo.repository.MagasinRepository;
-import com.pickandgo.repository.CreneauRepository;
-import com.pickandgo.repository.DisponibleRepository;
+import com.pickandgo.repository.*;
 import com.pickandgo.service.PanierService;
 import org.springframework.security.core.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +18,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,14 +35,18 @@ public class PanierController {
     private final MagasinRepository magasinRepository;
     private final CreneauRepository creneauRepository;
     private final DisponibleRepository disponibleRepository;
+    private final PanierRepository panierRepository;
+    private final CommanderRepository commanderRepository;
 
     @Autowired
-    public PanierController(PanierService panierService, JourRepository jourRepository, MagasinRepository magasinRepository, CreneauRepository creneauRepository, DisponibleRepository disponibleRepository) {
+    public PanierController(PanierService panierService, JourRepository jourRepository, MagasinRepository magasinRepository, CreneauRepository creneauRepository, DisponibleRepository disponibleRepository, PanierRepository panierRepository, CommanderRepository commanderRepository) {
         this.panierService = panierService;
         this.jourRepository = jourRepository;
         this.magasinRepository = magasinRepository;
         this.creneauRepository = creneauRepository;
         this.disponibleRepository = disponibleRepository;
+        this.panierRepository = panierRepository;
+        this.commanderRepository = commanderRepository;
     }
 
     @GetMapping("/utilisateur/{id}")
@@ -292,6 +294,68 @@ public class PanierController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur lors de la récupération des commandes : " + e.getMessage());
         }
     }
+
+
+// TEST SO POUR COMMANDE
+@PostMapping("/passer-commande/{idMagasin}/{idCreneau}")
+public ResponseEntity<Panier> passerCommande(
+        @PathVariable Integer idMagasin,
+        @PathVariable Integer idCreneau,
+        @RequestParam Integer idPanier) {
+
+    // 1. Récupérer panier d'origine
+    Panier panierOriginal = panierRepository.findById(idPanier)
+            .orElseThrow(() -> new RuntimeException("Panier introuvable"));
+
+    // 2. Récupérer magasin et créneau
+    Magasin magasin = magasinRepository.findById(idMagasin)
+            .orElseThrow(() -> new RuntimeException("Magasin introuvable"));
+
+    Creneau creneau = creneauRepository.findById(idCreneau)
+            .orElseThrow(() -> new RuntimeException("Créneau introuvable"));
+
+    // 3. Créer un nouveau panier
+    Panier nouveauPanier = new Panier();
+    nouveauPanier.setStatus(Panier.StatutPanier.COMMANDE);
+    nouveauPanier.setUtilisateur(panierOriginal.getUtilisateur());
+    nouveauPanier.setPrixtotalPa(panierOriginal.getPrixtotalPa());
+
+    // 4. Copier les lignes du panier original
+    List<Constituer> nouvellesLignes = new ArrayList<>();
+    for (Constituer ligne : panierOriginal.getLignes()) {
+        Constituer nouvelleLigne = new Constituer();
+        nouvelleLigne.setPanier(nouveauPanier); // très important pour la relation bidirectionnelle
+        nouvelleLigne.setProduit(ligne.getProduit());
+        nouvelleLigne.setQuantite(ligne.getQuantite());
+        nouvellesLignes.add(nouvelleLigne);
+    }
+    nouveauPanier.setLignes(nouvellesLignes);
+
+    // 5. Sauvegarder le panier pour obtenir son nouvel ID
+    panierRepository.save(nouveauPanier);
+
+    // 6. Créer la commande associée
+    Commander commande = new Commander();
+    CommanderId commandeId = new CommanderId();
+    commandeId.setIdPa(nouveauPanier.getIdPanier());
+    commandeId.setIdM(magasin.getId());
+
+    commande.setId(commandeId);
+    commande.setIdPa(nouveauPanier);
+    commande.setIdM(magasin);
+    commande.setDateC(LocalDate.now());
+    commande.setCreneauChoisi(String.valueOf(creneau.getId()));
+
+    commanderRepository.save(commande);
+
+    // 7. Injecter infos transitoires pour la réponse JSON
+    nouveauPanier.setDateC(commande.getDateC());
+    nouveauPanier.setCreneauChoisi(commande.getCreneauChoisi());
+    nouveauPanier.setMagasin(magasin);
+
+    return ResponseEntity.ok(nouveauPanier);
+}
+
 
 
 
