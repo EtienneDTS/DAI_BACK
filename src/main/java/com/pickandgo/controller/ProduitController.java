@@ -9,14 +9,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/produits")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class ProduitController {
 
     @Autowired
@@ -56,6 +58,24 @@ public class ProduitController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    @PostMapping("/upload-json")
+    public ResponseEntity<?> uploadJson(@RequestParam("file") MultipartFile file) {
+        try {
+            Produit produit = produitService.creerProduitDepuisFichier(file);
+            return ResponseEntity.status(HttpStatus.CREATED).body(DTOMapper.convertToDTO(produit));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/recommandations/{idU}")
+    public ResponseEntity<List<Map<String, Object>>> recommanderProduits(@PathVariable Integer idU) {
+        List<Map<String, Object>> recommandations = produitService.recommanderProduitsPourUtilisateur(idU);
+        return ResponseEntity.ok(recommandations);
+    }
+
+
 
     @PostMapping
     public ResponseEntity<ProduitDTO> createProduit(@RequestBody ProduitDTO produitDTO) {

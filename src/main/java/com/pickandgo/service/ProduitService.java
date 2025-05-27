@@ -20,6 +20,7 @@ import com.pickandgo.repository.PromotionRepository;
 
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -123,6 +124,7 @@ public class ProduitService {
         return produitRepository.save(nouveauProduit);
     }
 
+
     @Transactional
     public List<Produit> getAllProduits() {
         return produitRepository.findAll();
@@ -154,4 +156,19 @@ public class ProduitService {
         NouveauProduitDTO dto = mapper.readValue(file.getInputStream(), NouveauProduitDTO.class);
         return creerProduit(dto);
     }
+
+    @Transactional
+    public List<Map<String, Object>> recommanderProduitsPourUtilisateur(int idUtilisateur) {
+        List<Object[]> resultats = produitRepository.findTopProduitsForUser(idUtilisateur);
+
+        return resultats.stream().map(r -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", r[0]);
+            map.put("nom", r[1]);
+            map.put("marque", r[2]);
+            map.put("total_commandes", r[3]);
+            return map;
+        }).toList();
+    }
+
 }
