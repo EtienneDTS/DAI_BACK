@@ -25,33 +25,6 @@ public interface ProduitRepository extends JpaRepository<Produit, Integer> {
     @EntityGraph(attributePaths = {"motsCles", "rayon", "idCate"})
     Optional<Produit> findById(Integer id);
 
-    @Query(value = """
-    SELECT 
-        p.idP,
-        p.nomP,
-        p.marqueP,
-        SUM(c.quantiteP) AS total_commandes
-    FROM Panier pa
-    JOIN Constituer c ON pa.idPa = c.idPa
-    JOIN Produit p ON c.idP = p.idP
-    WHERE pa.idU = :idUtilisateur
-    GROUP BY p.idP, p.nomP, p.marqueP
-    ORDER BY total_commandes DESC
-    LIMIT 5
-    """, nativeQuery = true)
-    List<Object[]> findTopProduitsForUser(@Param("idUtilisateur") Integer idUtilisateur);
-
-
-    @Query(nativeQuery = true, value = """
-    SELECT DISTINCT p.idP FROM Produit p
-    LEFT JOIN Definir d ON p.idP = d.idP
-    WHERE EXISTS (
-        SELECT 1 FROM Definir d2
-        WHERE d2.idP = p.idP AND d2.idMc IN :motsClesIds
-    )
-    AND p.idP != :produitId
-    """)
-           
     @Query("SELECT p.id AS productId, COUNT(mc.id) AS matchCount " +
             "FROM Produit p JOIN p.motsCles mc " +
             "WHERE mc.id IN :motCleIds AND p.id != :produitId " +
@@ -89,8 +62,6 @@ public interface ProduitRepository extends JpaRepository<Produit, Integer> {
             "JOIN p.motsCles mc " +
             "WHERE mc.id IN :motsClesIds " +
             "AND p.id <> :produitId")
-
-           
     List<Integer> findSimilarProductIds(@Param("motsClesIds") List<Integer> motsClesIds,
                                         @Param("produitId") Integer produitId);
 
@@ -110,4 +81,20 @@ public interface ProduitRepository extends JpaRepository<Produit, Integer> {
     @Deprecated
     @EntityGraph(attributePaths = {"stockages"})
     List<Produit> findByMotsClesIdInAndIdNot(List<Integer> motCleIds, Integer produitId);
+
+    @Query(value = """
+    SELECT 
+        p.idP,
+        p.nomP,
+        p.marqueP,
+        SUM(c.quantiteP) AS total_commandes
+    FROM Panier pa
+    JOIN Constituer c ON pa.idPa = c.idPa
+    JOIN Produit p ON c.idP = p.idP
+    WHERE pa.idU = :idUtilisateur
+    GROUP BY p.idP, p.nomP, p.marqueP
+    ORDER BY total_commandes DESC
+    LIMIT 5
+    """, nativeQuery = true)
+    List<Object[]> findTopProduitsForUser(@Param("idUtilisateur") Integer idUtilisateur);
 }

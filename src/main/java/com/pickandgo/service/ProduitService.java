@@ -158,17 +158,31 @@ public class ProduitService {
     }
 
     @Transactional
-    public List<Map<String, Object>> recommanderProduitsPourUtilisateur(int idUtilisateur) {
+    public List<Produit> recommanderProduitsPourUtilisateur(int idUtilisateur) {
         List<Object[]> resultats = produitRepository.findTopProduitsForUser(idUtilisateur);
 
-        return resultats.stream().map(r -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", r[0]);
-            map.put("nom", r[1]);
-            map.put("marque", r[2]);
-            map.put("total_commandes", r[3]);
-            return map;
-        }).toList();
+        // Extraire les IDs des produits recommandés
+        List<Integer> produitIds = resultats.stream()
+                .map(r -> (Integer) r[0])
+                .collect(Collectors.toList());
+
+        // Si aucun produit n'est recommandé, retourner une liste vide
+        if (produitIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Récupérer les produits complets avec toutes leurs associations
+        List<Produit> produits = produitRepository.findAllByIdWithAssociations(produitIds);
+
+        // Conserver l'ordre de tri original basé sur le nombre de commandes
+        Map<Integer, Integer> orderMap = new HashMap<>();
+        for (int i = 0; i < produitIds.size(); i++) {
+            orderMap.put(produitIds.get(i), i);
+        }
+
+        return produits.stream()
+                .sorted(Comparator.comparing(p -> orderMap.getOrDefault(p.getId(), Integer.MAX_VALUE)))
+                .collect(Collectors.toList());
     }
 
 }

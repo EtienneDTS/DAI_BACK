@@ -11,9 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -70,8 +68,8 @@ public class ProduitController {
     }
 
     @GetMapping("/recommandations/{idU}")
-    public ResponseEntity<List<Map<String, Object>>> recommanderProduits(@PathVariable Integer idU) {
-        List<Map<String, Object>> recommandations = produitService.recommanderProduitsPourUtilisateur(idU);
+    public ResponseEntity<List<Produit>> recommanderProduits(@PathVariable Integer idU) {
+        List<Produit> recommandations = produitService.recommanderProduitsPourUtilisateur(idU);
         return ResponseEntity.ok(recommandations);
     }
 
